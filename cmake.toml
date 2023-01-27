@@ -1,4 +1,3 @@
-# Reference: https://build-cpp.github.io/cmkr/cmake-toml
 [project]
 name = "maan"
 

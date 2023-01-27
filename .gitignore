@@ -1,3 +1,7 @@
+# Exclude CLION project configuration files
+cmake-build-*/
+.idea/
+
 build/
 
 # Prerequisites
