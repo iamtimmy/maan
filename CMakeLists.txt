@@ -24,5 +24,100 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	configure_file(cmake.toml cmake.toml COPYONLY)
 endif()
 
-project(maan)
+project(maan
+	LANGUAGES
+		C
+		CXX
+)
+
+include(FetchContent)
+
+message(STATUS "Fetching catch2 (v3.3.0)...")
+FetchContent_Declare(catch2
+	GIT_REPOSITORY
+		"https://github.com/catchorg/Catch2"
+	GIT_TAG
+		v3.3.0
+)
+FetchContent_MakeAvailable(catch2)
+
+message(STATUS "Fetching fmt (9.1.0)...")
+FetchContent_Declare(fmt
+	GIT_REPOSITORY
+		"https://github.com/fmtlib/fmt/"
+	GIT_TAG
+		9.1.0
+)
+FetchContent_MakeAvailable(fmt)
+
+# Target: maan
+set(maan_SOURCES
+	"maan/include/maan.hpp"
+	"maan/include/maan/builtin.hpp"
+	"maan/include/maan/function.hpp"
+	"maan/include/maan/operations.hpp"
+	"maan/include/maan/stack.hpp"
+	"maan/include/maan/stl.hpp"
+	"maan/include/maan/utilities.hpp"
+	"maan/include/maan/vm.hpp"
+	"maan/include/maan/vm_type.hpp"
+)
+
+add_library(maan INTERFACE)
+
+target_sources(maan INTERFACE ${maan_SOURCES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${maan_SOURCES})
+
+target_compile_features(maan INTERFACE
+	cxx_std_20
+)
+
+target_include_directories(maan INTERFACE
+	"luajit/include"
+	"maan/include"
+)
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 8) # x64
+	target_link_directories(maan INTERFACE
+		"luajit/x64/lib"
+	)
+endif()
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 4) # x32
+	target_link_directories(maan INTERFACE
+		"luajit/x86/lib"
+	)
+endif()
+
+target_link_libraries(maan INTERFACE
+	lua51
+)
+
+# Target: tests
+set(tests_SOURCES
+	"tests/basic_types.cpp"
+	"tests/main.cpp"
+	"tests/stack.cpp"
+	cmake.toml
+)
+
+add_executable(tests)
+
+target_sources(tests PRIVATE ${tests_SOURCES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${tests_SOURCES})
+
+target_compile_features(tests PRIVATE
+	cxx_std_20
+)
+
+target_link_libraries(tests PRIVATE
+	Catch2::Catch2WithMain
+	fmt::fmt
+	maan
+)
+
+get_directory_property(CMKR_VS_STARTUP_PROJECT DIRECTORY ${PROJECT_SOURCE_DIR} DEFINITION VS_STARTUP_PROJECT)
+if(NOT CMKR_VS_STARTUP_PROJECT)
+	set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT tests)
+endif()
 

@@ -1,10 +1,22 @@
 [project]
 name = "maan"
+languages = ["C", "CXX"]
 
-# TODO: define a target for each of your executables/libraries like this:
-#[target.myexecutable]
-#type = "executable" # static, shared
-#sources = ["src/lua/*.cpp", "include/lua/*.hpp"]
-#include-directories = ["include"]
-#compile-features = ["cxx_std_11"]
-#link-libraries = ["target-or-library"]
+[fetch-content]
+catch2 = { git = "https://github.com/catchorg/Catch2", tag = "v3.3.0" }
+fmt = { git = "https://github.com/fmtlib/fmt/", tag = "9.1.0" }
+
+[target.maan]
+type = "interface"
+sources = ["maan/include/*.hpp", "maan/include/maan/*.hpp"]
+compile-features = ["cxx_std_20"]
+include-directories = ["luajit/include", "maan/include"]
+link-libraries = ["lua51"]
+x64.link-directories = ["luajit/x64/lib"]
+x32.link-directories = ["luajit/x86/lib"]
+
+[target.tests]
+type = "executable"
+sources = ["tests/*.cpp"]
+link-libraries = ["Catch2::Catch2WithMain", "fmt::fmt", "maan"]
+compile-features = ["cxx_std_20"]

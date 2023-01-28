@@ -1,8 +1,12 @@
-# Exclude CLION project configuration files
+# Exclude project specific files
+luajit/include/
+
+# Exclude cmkr build
+build/
+
+# Exclude intellij specific files
 cmake-build-*/
 .idea/
-
-build/
 
 # Prerequisites
 *.d
