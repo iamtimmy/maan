@@ -5,6 +5,7 @@
 
 #include <lua.hpp>
 #include <maan/stack.hpp>
+#include <maan/function.hpp>
 
 namespace maan
 {
@@ -33,6 +34,11 @@ namespace maan
             return operations::size( state );
         }
 
+        void pop( int n = 1 )
+        {
+            operations::pop( state, n );
+        }
+
         template< typename _type >
         [[nodiscard]] _type get( int index ) const
         {
@@ -48,12 +54,29 @@ namespace maan
         template< typename _type >
         void push( _type value ) const
         {
+            if constexpr ( function::is_function< _type > )
+            {
+                return function::push( state, value );
+            }
+
             return stack::push< _type >( state, value );
         }
 
-        void pop( int n = 1 )
+        template< int nresults, typename... _types >
+        int call( _types ... args )
         {
-            operations::pop( state, n );
+            constexpr int param_count = sizeof...( _types );
+            if constexpr ( param_count != 0 )
+            {
+                (push( args ), ...);
+            }
+
+            if constexpr ( nresults == LUA_MULTRET )
+            {
+                return operations::pcall( state, param_count );
+            }
+
+            return operations::pcall( state, param_count, nresults );
         }
 
         vm()

@@ -94,4 +94,151 @@ namespace maan::operations
     {
         lua_gc( state, LUA_GCSTEP, 150 );
     }
+
+    inline int error_handler( lua_State* state )
+    {
+        luaL_traceback( state, state, lua_tolstring( state, -1, nullptr ), 0 );
+        return 1;
+    }
+
+    inline int pcall( lua_State* state, int nargs, int nresults )
+    {
+        // expected stack layout:
+        // - params
+        // - chunk
+
+        // determine position of the error handler function
+        const auto error_function_pos = size( state ) - nargs;
+        lua_pushcclosure( state, error_handler, 0 );
+
+        // move error handler to the top of the stack
+        insert( state, error_function_pos );
+
+        // expected stack layout:
+        // - params
+        // - chunk
+        // - error handler
+
+        if ( const auto result = lua_pcall( state, nargs, nresults, error_function_pos ); result == 0 )
+                [[likely]]
+        {
+            remove( state, error_function_pos );
+            return nresults == LUA_MULTRET ? size( state ) : nresults;
+        }
+        else
+        {
+            switch ( result )
+            {
+                case LUA_ERRRUN :
+                {
+                    return -1;
+                }
+                case LUA_ERRMEM :
+                {
+                    clear( state );
+                    return -2;
+                }
+                case LUA_ERRERR :
+                {
+                    clear( state );
+                    return -3;
+                }
+            }
+
+            utilities::assume_unreachable();
+        }
+    }
+
+    inline int pcall( lua_State* state, int nargs )
+    {
+        const auto stack_size = size( state );
+
+        // expected stack layout:
+        // - params
+        // - chunk
+
+        // determine position of the error handler function
+        const auto error_function_pos = size( state ) - nargs;
+        lua_pushcclosure( state, error_handler, 0 );
+
+        // move error handler to the top of the stack
+        insert( state, error_function_pos );
+
+        // expected stack layout:
+        // - params
+        // - chunk
+        // - error handler
+
+        if ( const auto result = lua_pcall( state, nargs, LUA_MULTRET, error_function_pos ); result == 0 )
+                [[likely]]
+        {
+            remove( state, error_function_pos );
+            return size( state ) - ( stack_size - 1 - nargs );
+        }
+        else
+        {
+            switch ( result )
+            {
+                case LUA_ERRRUN :
+                {
+                    return -1;
+                }
+                case LUA_ERRMEM :
+                {
+                    clear( state );
+                    return -2;
+                }
+                case LUA_ERRERR :
+                {
+                    clear( state );
+                    return -3;
+                }
+            }
+
+            utilities::assume_unreachable();
+        }
+    }
+
+    inline int pcall( lua_State* state )
+    {
+        return pcall( state, size( state ) - 1 );
+    }
+
+    inline int execute( lua_State* state, const char* name, const char* code, size_t size )
+    {
+        if ( const auto result = luaL_loadbuffer( state, code, size, name ); result == LUA_OK )
+                [[likely]]
+        {
+            return pcall( state, 0 );
+        }
+        else
+        {
+            if ( result == LUA_ERRSYNTAX )
+            {
+                return -1;
+            }
+
+            clear( state );
+            return -1;
+        }
+    }
+
+    inline int execute( lua_State* state, const char* name, const char* code, size_t size, int nargs, int nresults )
+    {
+        if ( const auto result = luaL_loadbuffer( state, code, size, name ); result == LUA_OK )
+                [[likely]]
+        {
+            return pcall( state, nargs, nresults );
+        }
+        else
+        {
+            if ( result == LUA_ERRSYNTAX )
+            {
+                return -1;
+            }
+
+            clear( state );
+            return -1;
+        }
+    }
 }

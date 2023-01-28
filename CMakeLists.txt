@@ -96,6 +96,7 @@ target_link_libraries(maan INTERFACE
 # Target: tests
 set(tests_SOURCES
 	"tests/basic_types.cpp"
+	"tests/functions.cpp"
 	"tests/main.cpp"
 	"tests/stack.cpp"
 	cmake.toml

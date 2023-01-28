@@ -65,7 +65,7 @@ namespace maan::function
                     luaL_error( l, "invalid argument %d { got: %s | expected: %s }",
                                 index,
                                 luaL_typename( l, index + 1 ),
-                                get_name< arg_type >( l, index + 1 ) );
+                                stack::name< arg_type >( l, index + 1 ) );
                     utilities::assume_unreachable();
                 }
             }
@@ -100,11 +100,11 @@ namespace maan::function
     concept is_function =
     requires( _type )
     {
-        requires std::is_function_v< _type >;
+        requires std::is_function_v< std::remove_pointer_t< _type > >;
     };
 
     template< is_function _type >
-    void push_function( lua_State* state, _type function )
+    void push( lua_State* state, _type function )
     {
         using info = function_info< _type >;
 
@@ -113,8 +113,11 @@ namespace maan::function
             _type ptr;
         };
 
-        static constexpr auto call_info_size = sizeof( call_info );
-        new( lua_newuserdata( state, call_info_size ) ) call_info( function );
+        {
+            static constexpr auto call_info_size = sizeof( call_info );
+            auto data = new( lua_newuserdata( state, call_info_size ) ) call_info();
+            data->ptr = function;
+        }
 
         static lua_CFunction const call_wrapper = +[]( lua_State* state ) -> int
         {
@@ -130,16 +133,16 @@ namespace maan::function
             tuple params;
             info::set_tuple( state, params );
 
-            const auto info = static_cast<call_info* >(lua_touserdata( state, lua_upvalueindex( 1 ) ));
+            const auto call = static_cast<call_info* >(lua_touserdata( state, lua_upvalueindex( 1 ) ));
 
             if constexpr ( std::is_same_v< typename info::return_type, void > )
             {
-                std::apply( info->ptr, std::move( params ) );
+                std::apply( call->ptr, std::move( params ) );
                 return 0;
             }
             else
             {
-                stack::push( state, std::apply( info->ptr, std::move( params ) ) );
+                stack::push( state, std::apply( call->ptr, std::move( params ) ) );
                 return 1;
             }
         };
