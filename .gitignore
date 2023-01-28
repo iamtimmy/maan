@@ -16,6 +16,7 @@ cmake-build-*/
 *.lo
 *.o
 *.obj
+*.exp
 
 # Precompiled Headers
 *.gch
