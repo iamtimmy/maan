@@ -113,11 +113,8 @@ namespace maan::function
             _type ptr;
         };
 
-        {
-            static constexpr auto call_info_size = sizeof( call_info );
-            auto data = new( lua_newuserdata( state, call_info_size ) ) call_info();
-            data->ptr = function;
-        }
+        static constexpr auto call_info_size = sizeof( call_info );
+        new( lua_newuserdata( state, call_info_size ) ) call_info{ function };
 
         static lua_CFunction const call_wrapper = +[]( lua_State* state ) -> int
         {

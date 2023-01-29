@@ -16,7 +16,7 @@ TEST_CASE( "basic functions", "[functions][maan]" )
 
     REQUIRE( vm.stack_size() == 1 );
 
-    REQUIRE( vm.call< 1 >( 100.f, 100.f ) == 1 );
+    REQUIRE( vm.call( 100.f, 100.f ) == 1 );
     REQUIRE( vm.stack_size() == 1 );
 
     REQUIRE( vm.is< float >( -1 ) == true );

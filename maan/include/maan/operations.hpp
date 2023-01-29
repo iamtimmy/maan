@@ -131,6 +131,7 @@ namespace maan::operations
             {
                 case LUA_ERRRUN :
                 {
+                    remove( state, error_function_pos );
                     return -1;
                 }
                 case LUA_ERRMEM :
@@ -181,6 +182,7 @@ namespace maan::operations
             {
                 case LUA_ERRRUN :
                 {
+                    remove( state, error_function_pos );
                     return -1;
                 }
                 case LUA_ERRMEM :
