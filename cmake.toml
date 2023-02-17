@@ -3,8 +3,8 @@ name = "maan"
 languages = ["C", "CXX"]
 
 [fetch-content]
-catch2 = { git = "https://github.com/catchorg/Catch2", tag = "v3.3.0" }
-fmt = { git = "https://github.com/fmtlib/fmt/", tag = "9.1.0" }
+Catch2 = { git = "https://github.com/catchorg/Catch2", tag = "v3.3.0" }
+# fmt = { git = "https://github.com/fmtlib/fmt/", tag = "9.1.0" }
 
 [target.maan]
 type = "interface"
@@ -18,5 +18,11 @@ x32.link-directories = ["luajit/x86/lib"]
 [target.tests]
 type = "executable"
 sources = ["tests/*.cpp"]
-link-libraries = ["Catch2::Catch2WithMain", "fmt::fmt", "maan"]
+link-libraries = ["Catch2::Catch2WithMain", "maan"]
 compile-features = ["cxx_std_20"]
+cmake-after = """
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+include(CTest)
+include(Catch)
+catch_discover_tests(tests)
+"""

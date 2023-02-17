@@ -8,7 +8,7 @@ struct type
 	float b;
 };
 
-TEST_CASE( "basic pointer type", "[pointer type][maan]" )
+TEST_CASE( "basic pointer type", "[types]" )
 {
 	auto vm = maan::vm();
 	REQUIRE( vm.running() == true );
@@ -25,11 +25,14 @@ TEST_CASE( "basic pointer type", "[pointer type][maan]" )
 	REQUIRE( vm.stack_size() == 1 );
 
 	REQUIRE( vm.call( &data ) == 1 );
+
 	REQUIRE( vm.stack_size() == 1 );
 
 	REQUIRE( vm.is< type* >( -1 ) == true );
 	auto transfered_data = vm.get< type* >( -1 );
-	
+
 	REQUIRE( transfered_data != nullptr );
-	REQUIRE( transfered_data->a + transfered_data->b == 200.f );
+
+	auto result = transfered_data->a + transfered_data->b;
+	REQUIRE( result == 200.f );
 }

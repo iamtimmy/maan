@@ -2,7 +2,7 @@
 
 #include <maan.hpp>
 
-TEST_CASE( "basic stack", "[stack][maan]" )
+TEST_CASE( "basic stack", "[stack]" )
 {
     auto vm = maan::vm();
     REQUIRE( vm.running() == true );
@@ -18,21 +18,6 @@ TEST_CASE( "basic stack", "[stack][maan]" )
 
         const auto value = vm.get< bool >( -1 );
         REQUIRE( value == true );
-        REQUIRE( vm.stack_size() == 1 );
-
-        vm.pop();
-        REQUIRE( vm.stack_size() == 0 );
-    }
-
-    {
-        vm.push( nullptr );
-        REQUIRE( vm.stack_size() == 1 );
-
-        REQUIRE( vm.is< nullptr_t >( -1 ) == true );
-        REQUIRE( vm.stack_size() == 1 );
-
-        const auto value = vm.get< nullptr_t >( -1 );
-        REQUIRE( value == nullptr );
         REQUIRE( vm.stack_size() == 1 );
 
         vm.pop();

@@ -6,7 +6,7 @@ const auto syntax_error_code = R"(
 return -;
 )";
 
-TEST_CASE( "syntax error code", "[syntax error code][maan]" )
+TEST_CASE( "syntax error code", "[code]" )
 {
     auto vm = maan::vm();
     REQUIRE( vm.running() == true );
@@ -24,7 +24,7 @@ const auto error_code = R"(
 return non_existant_function();
 )";
 
-TEST_CASE( "error code", "[error code][maan]" )
+TEST_CASE( "error code", "[code]" )
 {
     auto vm = maan::vm();
     REQUIRE( vm.running() == true );

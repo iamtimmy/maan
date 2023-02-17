@@ -49,48 +49,49 @@ namespace maan
 			return operations::execute( state, name.data(), code.data(), code.size() );
 		}
 
-		template< typename _type >
-		[[nodiscard]] _type get( int index ) const
+		template< typename type >
+		[[nodiscard]] decltype( auto ) get( int&& index ) const
 		{
-			using type = std::remove_cvref_t< _type >;
-			return stack::get< type >( state, index );
+			return stack::get< type >( state, std::forward< int&& >( index ) );
 		}
 
-		template< typename _type >
-		[[nodiscard]] bool is( int index ) const
+		template< typename type >
+		[[nodiscard]] bool is( int&& index ) const
 		{
-			using type = std::remove_cvref_t< _type >;
-			return stack::is< type >( state, index );
+			return stack::is< type >( state, std::forward< int&& >( index ) );
 		}
 
-		template< typename _type >
-		void push( _type value ) const
+		void push( auto&& value ) const
 		{
-			using type = std::remove_cvref_t< _type >;
+			using type = decltype( value );
 
 			if constexpr ( function::is_function< type > )
 			{
-				return function::push( state, value );
+				return function::push( state, std::forward< type >( value ) );
 			}
-
-			return stack::push< type >( state, value );
+			else
+			{
+				return stack::push( state, std::forward< type >( value ) );
+			}
 		}
 
-		template< int nresults = LUA_MULTRET, typename... _types >
-		int call( _types ... args ) const
+		template< int nresults = LUA_MULTRET, typename... types >
+		int call( types&& ... args ) const
 		{
-			constexpr int param_count = sizeof...( _types );
+			constexpr int param_count = sizeof...( types );
 			if constexpr ( param_count != 0 )
 			{
-				(push( args ), ...);
+				(push( std::forward< types >( args ) ), ...);
 			}
 
 			if constexpr ( nresults == LUA_MULTRET )
 			{
 				return operations::pcall( state, param_count );
 			}
-
-			return operations::pcall( state, param_count, nresults );
+			else
+			{
+				return operations::pcall( state, param_count, nresults );
+			}
 		}
 
 		vm()

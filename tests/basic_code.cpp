@@ -8,7 +8,7 @@ return function(a)
 end
 )";
 
-TEST_CASE( "basic code", "[code][maan]" )
+TEST_CASE( "basic code", "[code]" )
 {
     auto vm = maan::vm();
     REQUIRE( vm.running() == true );

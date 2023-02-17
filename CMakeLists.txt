@@ -32,32 +32,21 @@ project(maan
 
 include(FetchContent)
 
-message(STATUS "Fetching catch2 (v3.3.0)...")
-FetchContent_Declare(catch2
+message(STATUS "Fetching Catch2 (v3.3.0)...")
+FetchContent_Declare(Catch2
 	GIT_REPOSITORY
 		"https://github.com/catchorg/Catch2"
 	GIT_TAG
 		v3.3.0
 )
-FetchContent_MakeAvailable(catch2)
-
-message(STATUS "Fetching fmt (9.1.0)...")
-FetchContent_Declare(fmt
-	GIT_REPOSITORY
-		"https://github.com/fmtlib/fmt/"
-	GIT_TAG
-		9.1.0
-)
-FetchContent_MakeAvailable(fmt)
+FetchContent_MakeAvailable(Catch2)
 
 # Target: maan
 set(maan_SOURCES
 	"maan/include/maan.hpp"
-	"maan/include/maan/builtin.hpp"
 	"maan/include/maan/function.hpp"
 	"maan/include/maan/operations.hpp"
 	"maan/include/maan/stack.hpp"
-	"maan/include/maan/stl.hpp"
 	"maan/include/maan/utilities.hpp"
 	"maan/include/maan/vm.hpp"
 	"maan/include/maan/vm_type.hpp"
@@ -116,7 +105,6 @@ target_compile_features(tests PRIVATE
 
 target_link_libraries(tests PRIVATE
 	Catch2::Catch2WithMain
-	fmt::fmt
 	maan
 )
 
@@ -124,4 +112,10 @@ get_directory_property(CMKR_VS_STARTUP_PROJECT DIRECTORY ${PROJECT_SOURCE_DIR} D
 if(NOT CMKR_VS_STARTUP_PROJECT)
 	set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT tests)
 endif()
+
+set(CMKR_TARGET tests)
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+include(CTest)
+include(Catch)
+catch_discover_tests(tests)
 

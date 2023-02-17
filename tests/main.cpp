@@ -2,7 +2,7 @@
 
 #include <maan.hpp>
 
-TEST_CASE( "basic lifetime", "[lifetime][maan]" )
+TEST_CASE( "basic lifetime", "[lifetime]" )
 {
     auto vm = maan::vm();
     REQUIRE( vm.running() == true );

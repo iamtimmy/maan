@@ -2,7 +2,7 @@
 
 #include <maan.hpp>
 
-TEST_CASE( "basic functions", "[functions][maan]" )
+TEST_CASE( "basic functions", "[functions]" )
 {
     auto vm = maan::vm();
     REQUIRE( vm.running() == true );
