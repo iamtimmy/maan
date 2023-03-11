@@ -103,16 +103,6 @@ namespace maan::stack
 		{
 			return push( state, *object );
 		}
-			/*else if constexpr ( std::is_class_v< type > && utilities::member_countable< type > )
-			{
-				static constexpr auto count = utilities::member_count< type >();
-				utilities::assume_that( count <= 10 );
-
-				utilities::visit_members( object, [state]( auto&& ... members )
-				{
-					(push( state, members ), ...);
-				} );
-			}*/
 		else if constexpr ( std::is_pointer_v< type > && std::is_class_v< type_noptr > )
 		{
 			const auto type_hash = static_cast<std::uintptr_t>(utilities::type_tag< type >::hash());
@@ -155,16 +145,6 @@ namespace maan::stack
 				return static_cast<type>(lua_tolstring( state, std::forward< int&& >( index ), nullptr ));
 			}
 		}
-			/*else if constexpr ( std::is_class_v< type > && utilities::member_countable< type > )
-			{
-				static constexpr auto count = utilities::member_count< type >();
-				utilities::assume_that( count <= 10 );
-
-				utilities::visit_members( object, [state]( auto&& ... members )
-				{
-					(push( state, members ), ...);
-				} );
-			}*/
 		else if constexpr ( std::is_pointer_v< type > && std::is_class_v< type_noptr > )
 		{
 			const auto data = static_cast<detail::lua_userdata*>(lua_touserdata( state, index ));
@@ -208,16 +188,6 @@ namespace maan::stack
 				return operations::is( state, index, vm_type::string );
 			}
 		}
-			/*else if constexpr ( std::is_class_v< type > && utilities::member_countable< type > )
-			{
-				static constexpr auto count = utilities::member_count< type >();
-				utilities::assume_that( count <= 10 );
-
-				utilities::visit_members( object, [state]( auto&& ... members )
-				{
-					(push( state, members ), ...);
-				} );
-			}*/
 		else if constexpr ( std::is_pointer_v< type > && std::is_class_v< type_noptr > )
 		{
 			const auto data = static_cast<detail::lua_userdata*>(lua_touserdata( state, index ));

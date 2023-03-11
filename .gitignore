@@ -1,8 +1,16 @@
 # Exclude project specific files
 luajit/include/
 
+# Exclude compilecommands.json
+compilecommands.json
+
 # Exclude cmkr build
 build/
+
+# Exclude visual studio files
+.vs/
+_ReSharper.Caches/
+out/
 
 # Exclude intellij specific files
 cmake-build-*/

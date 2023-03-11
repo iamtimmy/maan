@@ -24,6 +24,9 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	configure_file(cmake.toml cmake.toml COPYONLY)
 endif()
 
+# Variables
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 project(maan
 	LANGUAGES
 		C
@@ -44,6 +47,7 @@ FetchContent_MakeAvailable(Catch2)
 # Target: maan
 set(maan_SOURCES
 	"maan/include/maan.hpp"
+	"maan/include/maan/aggregate.hpp"
 	"maan/include/maan/function.hpp"
 	"maan/include/maan/operations.hpp"
 	"maan/include/maan/stack.hpp"
@@ -58,7 +62,7 @@ target_sources(maan INTERFACE ${maan_SOURCES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${maan_SOURCES})
 
 target_compile_features(maan INTERFACE
-	cxx_std_20
+	cxx_std_23
 )
 
 target_include_directories(maan INTERFACE
@@ -84,6 +88,7 @@ target_link_libraries(maan INTERFACE
 
 # Target: tests
 set(tests_SOURCES
+	"tests/aggregate_type.cpp"
 	"tests/basic_code.cpp"
 	"tests/basic_pointer_type.cpp"
 	"tests/basic_types.cpp"
@@ -100,7 +105,7 @@ target_sources(tests PRIVATE ${tests_SOURCES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${tests_SOURCES})
 
 target_compile_features(tests PRIVATE
-	cxx_std_20
+	cxx_std_23
 )
 
 target_link_libraries(tests PRIVATE

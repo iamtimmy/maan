@@ -2,7 +2,7 @@
 
 #include <maan.hpp>
 
-TEST_CASE( "basic type checking", "[types][maan]" )
+TEST_CASE( "basic type checking", "[types]" )
 {
 	auto vm = maan::vm();
 	REQUIRE( vm.running() == true );

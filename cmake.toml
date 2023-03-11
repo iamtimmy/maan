@@ -2,6 +2,9 @@
 name = "maan"
 languages = ["C", "CXX"]
 
+[variables]
+CMAKE_EXPORT_COMPILE_COMMANDS=true
+
 [fetch-content]
 Catch2 = { git = "https://github.com/catchorg/Catch2", tag = "v3.3.0" }
 # fmt = { git = "https://github.com/fmtlib/fmt/", tag = "9.1.0" }
@@ -9,7 +12,7 @@ Catch2 = { git = "https://github.com/catchorg/Catch2", tag = "v3.3.0" }
 [target.maan]
 type = "interface"
 sources = ["maan/include/*.hpp", "maan/include/maan/*.hpp"]
-compile-features = ["cxx_std_20"]
+compile-features = ["cxx_std_23"]
 include-directories = ["luajit/include", "maan/include"]
 link-libraries = ["lua51"]
 x64.link-directories = ["luajit/x64/lib"]
@@ -19,7 +22,7 @@ x32.link-directories = ["luajit/x86/lib"]
 type = "executable"
 sources = ["tests/*.cpp"]
 link-libraries = ["Catch2::Catch2WithMain", "maan"]
-compile-features = ["cxx_std_20"]
+compile-features = ["cxx_std_23"]
 cmake-after = """
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)

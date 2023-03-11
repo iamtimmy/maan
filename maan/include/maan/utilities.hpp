@@ -65,7 +65,7 @@
 #if MAAN_GNU
 #define MAAN_INLINE      __attribute__((always_inline))
 #define MAAN_NOINLINE    __attribute__((noinline))
-#define MAAN_ALIGN(x)    __attribute__((aligned(x)))
+#define MAAN_ALIGN( x )    __attribute__((aligned(x)))
 #define MAAN_TRIVIAL_ABI __attribute__((trivial_abi))
 #define MAAN_COLD        __attribute__((cold, noinline, disable_tail_calls))
 #elif MAAN_MSVC
@@ -111,7 +111,7 @@ namespace maan::utilities
 			{
 				auto [ sig, begin, delta, end ] = std::tuple{
 #if MAAN_GNU
-						std::string_view{__PRETTY_FUNCTION__}, std::string_view{"_id__"}, +3, "]"
+						std::string_view{ __PRETTY_FUNCTION__ }, std::string_view{ "_id__" }, +3, "]"
 #else
 						std::string_view{ __FUNCSIG__ }, std::string_view{ "_id__" }, +1, ">"
 #endif
@@ -172,7 +172,7 @@ namespace maan::utilities
 			{
 				auto [ sig, begin, delta, end ] = std::tuple{
 #if MAAN_GNU
-						std::string_view{__PRETTY_FUNCTION__}, std::string_view{"_id__"}, +3, ']'
+						std::string_view{ __PRETTY_FUNCTION__ }, std::string_view{ "_id__" }, +3, ']'
 #else
 						std::string_view{ __FUNCSIG__ }, std::string_view{ "_id__" }, +0, '>'
 #endif
@@ -318,6 +318,127 @@ namespace maan::utilities
 		requires 0 <= member_count< _type >( ) && 10 >= member_count< _type >();
 	};
 
+	MAAN_INLINE constexpr decltype( auto ) visit_members_types( member_countable auto&& object, auto&& visitor )
+	{
+		using type = std::remove_cvref_t< decltype( object ) >();
+		constexpr auto count = member_count< decltype( object ) >();
+
+		if constexpr ( count == 0 )
+		{
+			return visitor.template operator()<>();
+		}
+		else if constexpr ( count == 1 )
+		{
+			auto&& [ a1 ] = object;
+			return visitor.template operator()<
+					decltype( a1 ) >();
+		}
+		else if constexpr ( count == 2 )
+		{
+			auto&& [ a1, a2 ] = object;
+			return visitor.template operator()<
+					decltype( a1 ),
+					decltype( a2 ) >();
+		}
+		else if constexpr ( count == 3 )
+		{
+			auto&& [ a1, a2, a3 ] = object;
+			return visitor.template operator()<
+					decltype( a1 ),
+					decltype( a2 ),
+					decltype( a3 ) >();
+		}
+		else if constexpr ( count == 4 )
+		{
+			auto&& [ a1, a2, a3, a4 ] = object;
+			return visitor.template operator()<
+					decltype( a1 ),
+					decltype( a2 ),
+					decltype( a3 ),
+					decltype( a4 ) >();
+		}
+		else if constexpr ( count == 5 )
+		{
+			auto&& [ a1, a2, a3, a4, a5 ] = object;
+			return visitor.template operator()<
+					decltype( a1 ),
+					decltype( a2 ),
+					decltype( a3 ),
+					decltype( a4 ),
+					decltype( a5 ) >();
+		}
+		else if constexpr ( count == 6 )
+		{
+			auto&& [ a1, a2, a3, a4, a5, a6 ] = object;
+			return visitor.template operator()<
+					decltype( a1 ),
+					decltype( a2 ),
+					decltype( a3 ),
+					decltype( a4 ),
+					decltype( a5 ),
+					decltype( a6 ) >();
+		}
+		else if constexpr ( count == 7 )
+		{
+			auto&& [ a1, a2, a3, a4, a5, a6, a7 ] = object;
+			return visitor.template operator()<
+					decltype( a1 ),
+					decltype( a2 ),
+					decltype( a3 ),
+					decltype( a4 ),
+					decltype( a5 ),
+					decltype( a6 ),
+					decltype( a7 ) >();
+		}
+		else if constexpr ( count == 8 )
+		{
+			auto&& [ a1, a2, a3, a4, a5, a6, a7, a8 ] = object;
+			return visitor.template operator()<
+					decltype( a1 ),
+					decltype( a2 ),
+					decltype( a3 ),
+					decltype( a4 ),
+					decltype( a5 ),
+					decltype( a6 ),
+					decltype( a7 ),
+					decltype( a8 ) >();
+		}
+		else if constexpr ( count == 9 )
+		{
+			auto&& [ a1, a2, a3, a4, a5, a6, a7, a8, a9 ] = object;
+			return visitor.template operator()<
+					decltype( a1 ),
+					decltype( a2 ),
+					decltype( a3 ),
+					decltype( a4 ),
+					decltype( a5 ),
+					decltype( a6 ),
+					decltype( a7 ),
+					decltype( a8 ),
+					decltype( a9 ) >();
+		}
+		else if constexpr ( count == 10 )
+		{
+			auto&& [ a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 ] = object;
+			return visitor.template operator()<
+					decltype( a1 ),
+					decltype( a2 ),
+					decltype( a3 ),
+					decltype( a4 ),
+					decltype( a5 ),
+					decltype( a6 ),
+					decltype( a7 ),
+					decltype( a8 ),
+					decltype( a9 ),
+					decltype( a10 ) >();
+		}
+		else
+		{
+			static_assert( std::is_same_v< type, void >,
+			               "type can not be used for counting members" );
+		}
+	}
+
 	MAAN_INLINE constexpr decltype( auto ) visit_members( member_countable auto&& object, auto&& visitor )
 	{
 		constexpr auto count = member_count< decltype( object ) >();
@@ -383,91 +504,10 @@ namespace maan::utilities
 		}
 	}
 
-	MAAN_INLINE constexpr decltype( auto ) visit_member_pointers( member_countable auto&& object, auto&& visitor )
+	constexpr auto to_underlying( auto&& enum_value )
 	{
-		constexpr auto count = member_count< decltype( object ) >();
-
-		if constexpr ( count == 0 )
-		{
-			return visitor();
-		}
-		else if constexpr ( count == 1 )
-		{
-			auto&& [ a1 ] = object;
-			return visitor( &a1 );
-		}
-		else if constexpr ( count == 2 )
-		{
-			auto&& [ a1, a2 ] = object;
-			return visitor( &a1, &a2 );
-		}
-		else if constexpr ( count == 3 )
-		{
-			auto&& [ a1, a2, a3 ] = object;
-			return visitor( &a1, &a2, &a3 );
-		}
-		else if constexpr ( count == 4 )
-		{
-			auto&& [ a1, a2, a3, a4 ] = object;
-			return visitor( &a1, &a2, &a3, &a4 );
-		}
-		else if constexpr ( count == 5 )
-		{
-			auto&& [ a1, a2, a3, a4, a5 ] = object;
-			return visitor( &a1, &a2, &a3, &a4, &a5 );
-		}
-		else if constexpr ( count == 6 )
-		{
-			auto&& [ a1, a2, a3, a4, a5, a6 ] = object;
-			return visitor( &a1, &a2, &a3, &a4, &a5, &a6 );
-		}
-		else if constexpr ( count == 7 )
-		{
-			auto&& [ a1, a2, a3, a4, a5, a6, a7 ] = object;
-			return visitor( &a1, &a2, &a3, &a4, &a5, &a6, &a7 );
-		}
-		else if constexpr ( count == 8 )
-		{
-			auto&& [ a1, a2, a3, a4, a5, a6, a7, a8 ] = object;
-			return visitor( &a1, &a2, &a3, &a4, &a5, &a6, &a7, &a8 );
-		}
-		else if constexpr ( count == 9 )
-		{
-			auto&& [ a1, a2, a3, a4, a5, a6, a7, a8, a9 ] = object;
-			return visitor( &a1, &a2, &a3, &a4, &a5, &a6, &a7, &a8, &a9 );
-		}
-		else if constexpr ( count == 10 )
-		{
-			auto&& [ a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 ] = object;
-			return visitor( &a1, &a2, &a3, &a4, &a5, &a6, &a7, &a8, &a9, &a10 );
-		}
-		else
-		{
-			static_assert( std::is_same_v< decltype( object ), void >,
-			               "type can not be used for counting members" );
-		}
-	}
-
-	MAAN_INLINE constexpr void for_each_member( member_countable auto&& object, auto&& functor )
-	{
-		visit_members( std::forward< std::remove_cvref_t< decltype( object )>>( object ), [functor]( auto&& ... members )
-		{
-			(functor( members ), ...);
-		} );
-	}
-
-
-	MAAN_INLINE constexpr void for_each_member_pointers( member_countable auto&& object, auto&& functor )
-	{
-		visit_member_pointers( std::forward< std::remove_cvref_t< decltype( object )>>( object ), [functor]( auto&& ... members )
-		{
-			(functor( members ), ...);
-		} );
-	}
-
-	auto to_underlying( auto enum_value )
-	{
-		return static_cast<std::underlying_type_t< decltype( enum_value ) >>( enum_value );
+		using type = std::remove_cvref_t< decltype( enum_value ) >;
+		return static_cast<std::underlying_type_t< type >>( enum_value );
 	}
 
 	MAAN_INLINE static inline void breakpoint()

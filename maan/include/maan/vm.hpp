@@ -6,6 +6,7 @@
 #include <lua.hpp>
 #include <maan/stack.hpp>
 #include <maan/function.hpp>
+#include <maan/aggregate.hpp>
 
 namespace maan
 {
@@ -44,7 +45,7 @@ namespace maan
 			operations::pop( state, n );
 		}
 
-		int execute( std::string_view name, std::string_view code )
+		int execute( std::string_view name, std::string_view code ) const
 		{
 			return operations::execute( state, name.data(), code.data(), code.size() );
 		}
@@ -52,20 +53,77 @@ namespace maan
 		template< typename type >
 		[[nodiscard]] decltype( auto ) get( int&& index ) const
 		{
-			return stack::get< type >( state, std::forward< int&& >( index ) );
+			using cvtype = std::remove_cvref_t< type >;
+
+			if constexpr ( std::is_class_v< cvtype > && utilities::member_countable< cvtype > )
+			{
+				static constexpr auto count = utilities::member_count< cvtype >();
+
+				const auto stack_start_index = operations::abs( state, index );
+
+				const auto fn = [this, stack_start_index]< typename... types >()
+				{
+					std::tuple< types... > member_values;
+					aggregate::set_tuple( state, stack_start_index, member_values );
+
+					const auto fn = []( auto&& ... params ) -> cvtype
+					{
+						return cvtype{ params... };
+					};
+
+					return std::apply( fn, member_values );
+				};
+
+				return utilities::visit_members_types < type > ( type{}, fn );
+			}
+			else
+			{
+				return stack::get< type >( state, std::forward< int >( index ) );
+			}
 		}
 
 		template< typename type >
 		[[nodiscard]] bool is( int&& index ) const
 		{
-			return stack::is< type >( state, std::forward< int&& >( index ) );
+			using cvtype = std::remove_cvref_t< type >;
+
+			if constexpr ( std::is_class_v< cvtype > && utilities::member_countable< cvtype > )
+			{
+				static constexpr auto count = utilities::member_count< cvtype >();
+
+				const auto stack_size = operations::size( state );
+				const auto start_index = operations::abs( state, index );
+				const auto stop_index = start_index + count - 1;
+
+				if ( stop_index > stack_size )
+					return false;
+
+				const auto fn = [this, start_index]< typename... types >()
+				{
+					return aggregate::check< 0, types... >( state, start_index );
+				};
+
+				return utilities::visit_members_types < type > ( type{}, fn );
+			}
+			else
+			{
+				return stack::is< type >( state, std::forward< int >( index ) );
+			}
 		}
 
 		void push( auto&& value ) const
 		{
 			using type = decltype( value );
+			using cvtype = std::remove_cvref_t< type >;
 
-			if constexpr ( function::is_function< type > )
+			if constexpr ( std::is_class_v< cvtype > && utilities::member_countable< cvtype > )
+			{
+				utilities::visit_members( value, [this]( auto&& ... members )
+				{
+					(stack::push( state, members ), ...);
+				} );
+			}
+			else if constexpr ( function::is_function< type > )
 			{
 				return function::push( state, std::forward< type >( value ) );
 			}
