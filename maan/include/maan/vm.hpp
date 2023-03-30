@@ -96,7 +96,10 @@ namespace maan
 				const auto stop_index = start_index + count - 1;
 
 				if ( stop_index > stack_size )
+						[[unlikely]]
+				{
 					return false;
+				}
 
 				const auto fn = [this, start_index]< typename... types >()
 				{

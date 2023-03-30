@@ -45,7 +45,7 @@ namespace maan::function
 		static constexpr auto argument_count = check_and_count_arguments();
 
 		template< size_t index = 0 >
-		static void set_tuple( lua_State* l, tuple_type& tuple )
+		static void set_tuple( lua_State* state, tuple_type& tuple )
 		{
 			if constexpr ( index == sizeof...( _types ) )
 			{
@@ -54,18 +54,18 @@ namespace maan::function
 			{
 				using arg_type = std::remove_cvref_t< argument_types< index > >;
 
-				if ( stack::is< arg_type >( l, index + 1 ) )
+				if ( stack::is< arg_type >( state, index + 1 ) )
 						[[likely]]
 				{
-					std::get< index >( tuple ) = stack::get< arg_type >( l, index + 1 );
-					return set_tuple< index + 1 >( l, tuple );
+					std::get< index >( tuple ) = stack::get< arg_type >( state, index + 1 );
+					return set_tuple< index + 1 >( state, tuple );
 				}
 				else [[unlikely]]
 				{
-					luaL_error( l, "invalid argument %d { got: %s | expected: %s }",
+					luaL_error( state, "invalid argument %d { got: %s | expected: %s }",
 					            index,
-					            luaL_typename( l, index + 1 ),
-					            stack::name< arg_type >( l, index + 1 ) );
+					            luaL_typename( state, index + 1 ),
+					            stack::name< arg_type >( state, index + 1 ) );
 					utilities::assume_unreachable();
 				}
 			}

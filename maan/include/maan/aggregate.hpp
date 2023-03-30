@@ -32,9 +32,14 @@ namespace maan::aggregate
 			using argument_type = std::tuple_element_t< index, std::tuple< types... > >;
 
 			if ( !stack::is< argument_type >( state, stack_index + index ) )
+					[[unlikely]]
+			{
 				return false;
+			}
 			else
+			{
 				return check< index + 1, types... >( state, stack_index );
+			}
 		}
 	}
 }
