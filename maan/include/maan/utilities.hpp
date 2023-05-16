@@ -281,6 +281,45 @@ namespace maan::utilities
 		}
 	};
 
+	class string_literal
+	{
+		const char* v;
+		size_t length;
+
+	public:
+		template< size_t Size >
+		constexpr string_literal( char(& literal)[Size] ) noexcept
+				: v{ literal }, length{ Size - 1 }
+		{
+		}
+
+		template< size_t Size >
+		constexpr string_literal( const char(& literal)[Size] ) noexcept
+				: v{ literal }, length{ Size - 1 }
+		{
+		}
+
+		[[nodiscard]] constexpr size_t size() const noexcept
+		{
+			return length;
+		}
+
+		[[nodiscard]] constexpr const char* data() const noexcept
+		{
+			return v;
+		}
+
+		constexpr operator const char*() const noexcept
+		{
+			return v;
+		}
+
+		constexpr operator std::string_view() const noexcept
+		{
+			return { v, length };
+		}
+	};
+
 	template< typename _type >
 	concept aggregate_member_countable =
 	requires( _type ) { requires std::is_aggregate_v< _type >; };
@@ -504,7 +543,7 @@ namespace maan::utilities
 		}
 	}
 
-	constexpr auto to_underlying( auto&& enum_value )
+	MAAN_INLINE constexpr auto to_underlying( auto&& enum_value )
 	{
 		using type = std::remove_cvref_t< decltype( enum_value ) >;
 		return static_cast<std::underlying_type_t< type >>( enum_value );

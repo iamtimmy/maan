@@ -14,7 +14,7 @@ namespace maan::operations
     }
 
     template< int index >
-    int absc( lua_State* state )
+    constexpr int absc( lua_State* state )
     {
         if constexpr ( index > LUA_REGISTRYINDEX && index < 0 )
         {

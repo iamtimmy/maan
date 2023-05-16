@@ -89,9 +89,9 @@ target_link_libraries(maan INTERFACE
 # Target: tests
 set(tests_SOURCES
 	"tests/aggregate_type.cpp"
-	"tests/basic_code.cpp"
 	"tests/basic_pointer_type.cpp"
 	"tests/basic_types.cpp"
+	"tests/code.cpp"
 	"tests/error_code.cpp"
 	"tests/functions.cpp"
 	"tests/main.cpp"

@@ -39,7 +39,9 @@ namespace maan::stack
 		concept is_lua_string_convertable =
 		requires( _type )
 		{
-			requires std::is_same_v< const char*, _type > || std::is_same_v< char*, _type >;
+			requires std::is_same_v< _type, const char* > || std::is_same_v< _type, char* > ||
+			         std::is_same_v< _type, std::string > || std::is_same_v< _type, std::string_view > ||
+			         std::is_nothrow_convertible_v< _type, utilities::string_literal >;
 		};
 
 		template< typename _type >
@@ -96,12 +98,20 @@ namespace maan::stack
 			}
 			else if constexpr ( detail::is_lua_string_convertable< type > )
 			{
-				lua_pushstring( state, std::forward< decltype( object ) >( object ) );
+				if constexpr ( std::is_nothrow_convertible_v< type, utilities::string_literal > )
+				{
+					const auto literal = utilities::string_literal{ object };
+					lua_pushlstring( state, literal.data(), literal.size() );
+				}
+				else if constexpr ( std::is_same_v< std::string, type > || std::is_same_v< std::string_view, type > )
+				{
+					lua_pushlstring( state, object.data(), object.size() );
+				}
+				else
+				{
+					lua_pushstring( state, std::forward< decltype( object ) >( object ) );
+				}
 			}
-		}
-		else if constexpr ( detail::is_lua_fundamental_convertable< type_noptr > )
-		{
-			return push( state, *object );
 		}
 		else if constexpr ( std::is_pointer_v< type > && std::is_class_v< type_noptr > )
 		{
@@ -140,9 +150,18 @@ namespace maan::stack
 			{
 				return static_cast<type>(lua_tonumber( state, std::forward< int&& >( index ) ));
 			}
-			else if constexpr ( std::is_same_v< const char*, type > || std::is_same_v< char*, type > )
+			else if constexpr ( detail::is_lua_string_convertable< type > )
 			{
-				return static_cast<type>(lua_tolstring( state, std::forward< int&& >( index ), nullptr ));
+				if constexpr ( std::is_same_v< type, std::string > || std::is_same_v< type, std::string_view > )
+				{
+					size_t size;
+					const auto data = lua_tolstring( state, std::forward< int&& >( index ), &size );
+					return type{ data, size };
+				}
+				else
+				{
+					return static_cast<type>(lua_tolstring( state, std::forward< int&& >( index ), nullptr ));
+				}
 			}
 		}
 		else if constexpr ( std::is_pointer_v< type > && std::is_class_v< type_noptr > )
@@ -183,7 +202,7 @@ namespace maan::stack
 			{
 				return operations::is( state, index, vm_type::number );
 			}
-			else if constexpr ( std::is_same_v< const char*, type > || std::is_same_v< char*, type > )
+			else if constexpr ( detail::is_lua_string_convertable< type > )
 			{
 				return operations::is( state, index, vm_type::string );
 			}
@@ -224,7 +243,7 @@ namespace maan::stack
 			{
 				return "number";
 			}
-			else if constexpr ( std::is_same_v< const char*, type > || std::is_same_v< char*, type > )
+			else if constexpr ( detail::is_lua_string_convertable< type > )
 			{
 				return "string";
 			}
