@@ -6,7 +6,7 @@ languages = ["C", "CXX"]
 CMAKE_EXPORT_COMPILE_COMMANDS=true
 
 [fetch-content]
-Catch2 = { git = "https://github.com/catchorg/Catch2", tag = "v3.3.0" }
+Catch2 = { git = "https://github.com/catchorg/Catch2", tag = "v3.3.2" }
 # fmt = { git = "https://github.com/fmtlib/fmt/", tag = "9.1.0" }
 
 [target.maan]
