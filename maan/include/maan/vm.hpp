@@ -45,13 +45,13 @@ namespace maan
 			operations::pop( state, n );
 		}
 
-		int execute( std::string_view name, std::string_view code ) const
+		[[nodiscard]] int execute( std::string_view name, std::string_view code ) const
 		{
 			return operations::execute( state, name.data(), code.data(), code.size() );
 		}
 
 		template< typename type >
-		[[nodiscard]] decltype( auto ) get( int&& index ) const
+		[[nodiscard]] decltype( auto ) get( int index ) const
 		{
 			using cvtype = std::remove_cvref_t< type >;
 
@@ -78,12 +78,12 @@ namespace maan
 			}
 			else
 			{
-				return stack::get< type >( state, std::forward< int >( index ) );
+				return stack::get< type >( state, index );
 			}
 		}
 
 		template< typename type >
-		[[nodiscard]] bool is( int&& index ) const
+		[[nodiscard]] bool is( int index ) const
 		{
 			using cvtype = std::remove_cvref_t< type >;
 
@@ -110,7 +110,7 @@ namespace maan
 			}
 			else
 			{
-				return stack::is< type >( state, std::forward< int >( index ) );
+				return stack::is< type >( state, index );
 			}
 		}
 

@@ -7,37 +7,37 @@
 
 namespace maan::function
 {
-	template< typename _return, typename... _types >
+	template< typename return_type, typename... types >
 	struct function_info;
 
-	template< typename _return, typename... _types >
-	struct function_info< _return( _types ... ) >
+	template< typename return_type, typename... types >
+	struct function_info< return_type( types ... ) >
 	{
-		using return_type = std::remove_cvref_t< _return >;
-		using tuple_type = std::tuple< _types... >;
+		using cvreturn_type = std::remove_cvref_t< return_type >;
+		using tuple_type = std::tuple< types... >;
 
 		template< int index >
-		using argument_types = std::tuple_element_t< index, std::tuple< _types... > >;
+		using argument_types = std::tuple_element_t< index, std::tuple< types... > >;
 
 		static consteval size_t check_return()
 		{
-			static_assert( stack::is_lua_pushable< return_type >, "wrapped function has unsupported return type" );
+			static_assert( stack::is_lua_pushable< cvreturn_type >, "wrapped function has unsupported return type" );
 			return 1;
 		}
 
-		template< size_t _argument_number = 0 >
+		template< size_t argument_number = 0 >
 		static consteval size_t check_and_count_arguments()
 		{
-			if constexpr ( _argument_number == sizeof...( _types ) )
+			if constexpr ( argument_number == sizeof...( types ) )
 			{
-				return _argument_number;
+				return argument_number;
 			}
 			else
 			{
-				using arg_type = std::remove_cvref_t< std::tuple_element_t< _argument_number, tuple_type > >;
+				using arg_type = std::remove_cvref_t< std::tuple_element_t< argument_number, tuple_type > >;
 				static_assert( stack::is_lua_pushable< arg_type >, "wrapped function has unsupported argument type" );
 
-				return check_and_count_arguments< _argument_number + 1 >();
+				return check_and_count_arguments< argument_number + 1 >();
 			}
 		}
 
@@ -47,7 +47,7 @@ namespace maan::function
 		template< size_t index = 0 >
 		static void set_tuple( lua_State* state, tuple_type& tuple )
 		{
-			if constexpr ( index == sizeof...( _types ) )
+			if constexpr ( index == sizeof...( types ) )
 			{
 			}
 			else
@@ -72,35 +72,35 @@ namespace maan::function
 		}
 	};
 
-	template< typename _return, typename... _types >
-	struct function_info< _return( * )( _types ... ) >
-			: function_info< _return( _types ... ) >
+	template< typename return_type, typename... types >
+	struct function_info< return_type( * )( types ... ) >
+			: function_info< return_type( types ... ) >
 	{
 	};
 
-	template< typename _return, typename... _types >
-	struct function_info< _return( * const )( _types ... ) >
-			: function_info< _return( _types ... ) >
+	template< typename return_type, typename... types >
+	struct function_info< return_type( * const )( types ... ) >
+			: function_info< return_type( types ... ) >
 	{
 	};
 
-	template< typename _class, typename _return, typename... _types >
-	struct function_info< _return( _class::* )( _types ... ) >
-			: function_info< _return( _class*, _types ... ) >
+	template< typename clazz, typename return_type, typename... types >
+	struct function_info< return_type( clazz::* )( types ... ) >
+			: function_info< return_type( clazz*, types ... ) >
 	{
 	};
 
-	template< typename _class, typename _return, typename... _types >
-	struct function_info< _return( _class::* )( _types ... ) const >
-			: function_info< _return( _class*, _types ... ) >
+	template< typename clazz, typename return_type, typename... types >
+	struct function_info< return_type( clazz::* )( types ... ) const >
+			: function_info< return_type( clazz*, types ... ) >
 	{
 	};
 
-	template< typename _type >
+	template< typename type >
 	concept is_function =
-	requires( _type )
+	requires( type )
 	{
-		requires std::is_function_v< std::remove_pointer_t< std::remove_cvref_t< _type > > >;
+		requires std::is_function_v< std::remove_pointer_t< std::remove_cvref_t< type > > >;
 	};
 
 	void push( lua_State* state, is_function auto&& function )
@@ -131,7 +131,7 @@ namespace maan::function
 
 			const auto call = static_cast<call_info* >(lua_touserdata( state, lua_upvalueindex( 1 ) ));
 
-			if constexpr ( std::is_same_v< typename info::return_type, void > )
+			if constexpr ( std::is_same_v< typename info::cvreturn_type, void > )
 			{
 				std::apply( call->ptr, std::move( params ) );
 				return 0;

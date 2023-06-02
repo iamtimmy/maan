@@ -97,8 +97,8 @@ namespace maan::utilities
 	{
 		struct utype
 		{
-			template< typename _type >
-			operator _type()
+			template< typename T >
+			operator T() // NOLINT(hicpp-explicit-conversions)
 			{
 			}
 		};
@@ -106,14 +106,14 @@ namespace maan::utilities
 		template< typename T >
 		struct type_namer
 		{
-			template< typename __id__ = T >
-			static consteval std::string_view _id__()
+			template< typename id = T >
+			static consteval std::string_view id()
 			{
 				auto [ sig, begin, delta, end ] = std::tuple{
 #if MAAN_GNU
-						std::string_view{ __PRETTY_FUNCTION__ }, std::string_view{ "_id__" }, +3, "]"
+						std::string_view{ __PRETTY_FUNCTION__ }, std::string_view{ "id" }, +3, "]"
 #else
-						std::string_view{ __FUNCSIG__ }, std::string_view{ "_id__" }, +1, ">"
+						std::string_view{ __FUNCSIG__ }, std::string_view{ "id" }, +1, ">"
 #endif
 				};
 
@@ -121,15 +121,21 @@ namespace maan::utilities
 				//
 				size_t f = sig.size();
 				while ( sig.substr( --f, begin.size() ).compare( begin ) != 0 )
+				{
 					if ( f == 0 )
+					{
 						return "";
+					}
+				}
 				f += begin.size() + delta;
 
 				// Find the end of the string.
 				//
 				auto l = sig.find_first_of( end, f );
 				if ( l == std::string::npos )
+				{
 					return "";
+				}
 
 				// Return the value.
 				//
@@ -147,18 +153,18 @@ namespace maan::utilities
 
 			static constexpr auto name = []()
 			{
-				constexpr std::string_view view = type_namer< T >::_id__< T >();
+				constexpr std::string_view view = type_namer< T >::id< T >();
 				std::array< char, view.length() + 1 > data = {};
 				std::copy( view.begin(), view.end(), data.data() );
 				return data;
 			}();
 
-			inline consteval operator std::string_view() const
+			inline consteval operator std::string_view() const // NOLINT(hicpp-explicit-conversions)
 			{
 				return { &name[0], &name[name.size() - 1] };
 			}
 
-			inline consteval operator const char*() const
+			inline consteval operator const char*() const // NOLINT(hicpp-explicit-conversions)
 			{
 				return &name[0];
 			}
@@ -167,14 +173,14 @@ namespace maan::utilities
 		template< auto V >
 		struct value_namer
 		{
-			template< auto __id__ = V >
-			static consteval std::string_view _id__()
+			template< auto id = V >
+			static consteval std::string_view id()
 			{
 				auto [ sig, begin, delta, end ] = std::tuple{
 #if MAAN_GNU
-						std::string_view{ __PRETTY_FUNCTION__ }, std::string_view{ "_id__" }, +3, ']'
+						std::string_view{ __PRETTY_FUNCTION__ }, std::string_view{ "id" }, +3, ']'
 #else
-						std::string_view{ __FUNCSIG__ }, std::string_view{ "_id__" }, +0, '>'
+						std::string_view{ __FUNCSIG__ }, std::string_view{ "id" }, +0, '>'
 #endif
 				};
 
@@ -182,14 +188,18 @@ namespace maan::utilities
 				//
 				size_t f = sig.rfind( begin );
 				if ( f == std::string::npos )
+				{
 					return "";
+				}
 				f += begin.size() + delta;
 
 				// Find the end of the string.
 				//
 				auto l = sig.find( end, f );
 				if ( l == std::string::npos )
+				{
 					return "";
+				}
 
 				// Return the value.
 				//
@@ -198,18 +208,18 @@ namespace maan::utilities
 
 			static constexpr auto name = []()
 			{
-				constexpr std::string_view view = value_namer< V >::_id__< V >();
+				constexpr std::string_view view = value_namer< V >::id< V >();
 				std::array< char, view.length() + 1 > data = {};
 				std::copy( view.begin(), view.end(), data.data() );
 				return data;
 			}();
 
-			inline consteval operator std::string_view() const
+			inline consteval operator std::string_view() const // NOLINT(hicpp-explicit-conversions)
 			{
 				return { &name[0], &name[name.size() - 1] };
 			}
 
-			inline consteval operator const char*() const
+			inline consteval operator const char*() const // NOLINT(hicpp-explicit-conversions)
 			{
 				return &name[0];
 			}
@@ -218,14 +228,14 @@ namespace maan::utilities
 		static consteval uint32_t fnv1a32_hash( const char* sig )
 		{
 			uint32_t tmp = 0x811c9dc5;
-			while ( *sig )
+			while ( *sig ) // NOLINT(readability-implicit-bool-conversion)
 			{
-				tmp ^= *sig++;
+				tmp ^= *sig++; // NOLINT(hicpp-signed-bitwise,cppcoreguidelines-pro-bounds-pointer-arithmetic)
 				tmp *= 0x01000193;
 			}
 			return tmp;
 		}
-	};
+	}
 
 	template< typename T >
 	struct type_tag
@@ -257,7 +267,7 @@ namespace maan::utilities
 		using value_type = decltype( V );
 		static constexpr value_type value = V;
 
-		constexpr operator value_type() const noexcept
+		constexpr operator value_type() const noexcept // NOLINT(hicpp-explicit-conversions)
 		{
 			return value;
 		}
@@ -288,13 +298,13 @@ namespace maan::utilities
 
 	public:
 		template< size_t Size >
-		constexpr string_literal( char(& literal)[Size] ) noexcept
+		constexpr string_literal( char(& literal)[Size] ) noexcept // NOLINT(hicpp-explicit-conversions,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 				: v{ literal }, length{ Size - 1 }
 		{
 		}
 
 		template< size_t Size >
-		constexpr string_literal( const char(& literal)[Size] ) noexcept
+		constexpr string_literal( const char(& literal)[Size] ) noexcept // NOLINT(hicpp-explicit-conversions,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 				: v{ literal }, length{ Size - 1 }
 		{
 		}
@@ -309,35 +319,38 @@ namespace maan::utilities
 			return v;
 		}
 
-		constexpr operator const char*() const noexcept
+		constexpr operator const char*() const noexcept // NOLINT(hicpp-explicit-conversions)
 		{
 			return v;
 		}
 
-		constexpr operator std::string_view() const noexcept
+		constexpr operator std::string_view() const noexcept // NOLINT(hicpp-explicit-conversions)
 		{
 			return { v, length };
 		}
 	};
 
-	template< typename _type >
+	template< typename T >
 	concept aggregate_member_countable =
-	requires( _type ) { requires std::is_aggregate_v< _type >; };
+	requires( T ) { requires std::is_aggregate_v< T >; };
 
-	template< aggregate_member_countable _type >
+	template< aggregate_member_countable T >
 	consteval int aggregate_member_counter( auto&& ... members )
 	{
-		if constexpr ( requires { _type{ members... }; } == false) {
+		if constexpr ( requires { T{ members... }; } == false ) // NOLINT(readability-simplify-boolean-expr)
+		{
 			return sizeof...( members ) - 1;
-		} else {
-			return aggregate_member_counter< _type >( members..., detail::utype{} );
+		}
+		else
+		{
+			return aggregate_member_counter< T >( members..., detail::utype{} );
 		}
 	}
 
-	template< typename _type >
+	template< typename T >
 	consteval int member_count()
 	{
-		using type = std::remove_cvref_t< _type >;
+		using type = std::remove_cvref_t< T >;
 
 		if constexpr ( !std::is_class_v< type > )
 		{
@@ -351,10 +364,12 @@ namespace maan::utilities
 		return -1;
 	}
 
-	template< typename _type >
+	static constexpr auto maximum_member_countable_member_count = 10;
+
+	template< typename T >
 	concept member_countable =
-	requires( _type ) {
-		requires 0 <= member_count< _type >( ) && 10 >= member_count< _type >();
+	requires( T ) {
+		requires 0 <= member_count< T >( ) && maximum_member_countable_member_count >= member_count< T >();
 	};
 
 	MAAN_INLINE constexpr decltype( auto ) visit_members_types( member_countable auto&& object, auto&& visitor )

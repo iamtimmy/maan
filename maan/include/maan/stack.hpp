@@ -17,59 +17,59 @@ namespace maan::stack
 			void* data;
 		};
 
-		template< typename _type >
+		template< typename T >
 		concept is_lua_integer_convertable =
-		requires( _type )
+		requires( T )
 		{
-			requires std::is_integral_v< _type > &&
-			         ( std::is_signed_v< _type > && sizeof( _type ) < sizeof( int64_t ) ||
-			           std::is_unsigned_v< _type > && sizeof( _type ) < sizeof( uint32_t ) );
+			requires std::is_integral_v< T > &&
+			         ( std::is_signed_v< T > && sizeof( T ) < sizeof( int64_t ) ||
+			           std::is_unsigned_v< T > && sizeof( T ) < sizeof( uint32_t ) );
 		};
 
-		template< typename _type >
+		template< typename T >
 		concept is_lua_number_convertable =
-		requires( _type )
+		requires( T )
 		{
-			requires std::is_floating_point_v< _type > ||
-			         ( std::is_signed_v< _type > && sizeof( _type ) >= sizeof( int64_t ) ||
-			           std::is_unsigned_v< _type > && sizeof( _type ) >= sizeof( uint32_t ) );
+			requires std::is_floating_point_v< T > ||
+			         ( std::is_signed_v< T > && sizeof( T ) >= sizeof( int64_t ) ||
+			           std::is_unsigned_v< T > && sizeof( T ) >= sizeof( uint32_t ) );
 		};
 
-		template< typename _type >
+		template< typename T >
 		concept is_lua_string_convertable =
-		requires( _type )
+		requires( T )
 		{
-			requires std::is_same_v< _type, const char* > || std::is_same_v< _type, char* > ||
-			         std::is_same_v< _type, std::string > || std::is_same_v< _type, std::string_view > ||
-			         std::is_nothrow_convertible_v< _type, utilities::string_literal >;
+			requires std::is_same_v< T, const char* > || std::is_same_v< T, char* > ||
+			         std::is_same_v< T, std::string > || std::is_same_v< T, std::string_view > ||
+			         std::is_nothrow_convertible_v< T, utilities::string_literal >;
 		};
 
-		template< typename _type >
+		template< typename T >
 		concept is_lua_pushable_pointer =
-		requires( _type )
+		requires( T )
 		{
-			std::is_pointer_v< _type > && std::is_class_v< std::remove_pointer< _type > >;
+			std::is_pointer_v< T > && std::is_class_v< std::remove_pointer< T > >;
 		};
 
-		template< typename _type >
+		template< typename T >
 		concept is_lua_fundamental_convertable =
-		requires( _type )
+		requires( T )
 		{
-			requires std::is_same_v< bool, _type > ||
-			         is_lua_integer_convertable< _type > ||
-			         is_lua_number_convertable< _type > ||
-			         is_lua_string_convertable< _type >;
+			requires std::is_same_v< bool, T > ||
+			         is_lua_integer_convertable< T > ||
+			         is_lua_number_convertable< T > ||
+			         is_lua_string_convertable< T >;
 		};
 	}
 
-	template< typename _type >
+	template< typename T >
 	concept is_lua_pushable =
-	requires( _type )
+	requires( T )
 	{
-		requires std::is_same_v< void, _type > || // can always push nothing onto the stack
-		         detail::is_lua_fundamental_convertable< _type > || // fundamental cpp and lua types
-		         detail::is_lua_fundamental_convertable< std::remove_pointer< _type > > ||
-		         detail::is_lua_pushable_pointer< _type >;
+		requires std::is_same_v< void, T > || // can always push nothing onto the stack
+		         detail::is_lua_fundamental_convertable< T > || // fundamental cpp and lua types
+		         detail::is_lua_fundamental_convertable< std::remove_pointer< T > > ||
+		         detail::is_lua_pushable_pointer< T >;
 	};
 
 	MAAN_INLINE void push( lua_State* state, auto&& object )
@@ -126,7 +126,7 @@ namespace maan::stack
 	}
 
 	template< typename return_type >
-	MAAN_INLINE decltype( auto ) get( lua_State* state, int&& index )
+	MAAN_INLINE decltype( auto ) get( lua_State* state, int index )
 	requires is_lua_pushable< std::remove_cvref_t< return_type > >
 	{
 		using type = std::remove_cvref_t< return_type >;
@@ -140,33 +140,33 @@ namespace maan::stack
 		{
 			if constexpr ( std::is_same_v< bool, type > )
 			{
-				return static_cast<bool>(lua_toboolean( state, std::forward< int&& >( index ) ));
+				return static_cast<bool>(lua_toboolean( state, index ));
 			}
 			else if constexpr ( detail::is_lua_integer_convertable< type > )
 			{
-				return static_cast<type>(lua_tointeger( state, std::forward< int&& >( index ) ));
+				return static_cast<type>(lua_tointeger( state, index ));
 			}
 			else if constexpr ( detail::is_lua_number_convertable< type > )
 			{
-				return static_cast<type>(lua_tonumber( state, std::forward< int&& >( index ) ));
+				return static_cast<type>(lua_tonumber( state, index ));
 			}
 			else if constexpr ( detail::is_lua_string_convertable< type > )
 			{
 				if constexpr ( std::is_same_v< type, std::string > || std::is_same_v< type, std::string_view > )
 				{
-					size_t size;
-					const auto data = lua_tolstring( state, std::forward< int&& >( index ), &size );
+					size_t size{};
+					const auto* data = lua_tolstring( state, index, &size );
 					return type{ data, size };
 				}
 				else
 				{
-					return static_cast<type>(lua_tolstring( state, std::forward< int&& >( index ), nullptr ));
+					return static_cast<type>(lua_tolstring( state, index, nullptr ));
 				}
 			}
 		}
 		else if constexpr ( std::is_pointer_v< type > && std::is_class_v< type_noptr > )
 		{
-			const auto data = static_cast<detail::lua_userdata*>(lua_touserdata( state, index ));
+			const auto* data = static_cast<detail::lua_userdata*>(lua_touserdata( state, index ));
 			return reinterpret_cast<type>(data->data);
 		}
 		else
@@ -177,7 +177,7 @@ namespace maan::stack
 	}
 
 	template< typename checked_type >
-	MAAN_INLINE bool is( lua_State* state, int&& index )
+	MAAN_INLINE bool is( lua_State* state, int index )
 	requires is_lua_pushable< std::remove_cvref_t< checked_type > >
 	{
 		using type = std::remove_cvref_t< checked_type >;
@@ -194,11 +194,8 @@ namespace maan::stack
 			{
 				return operations::is( state, index, vm_type::boolean );
 			}
-			else if constexpr ( detail::is_lua_integer_convertable< type > )
-			{
-				return operations::is( state, index, vm_type::number );
-			}
-			else if constexpr ( detail::is_lua_number_convertable< type > )
+			else if constexpr ( detail::is_lua_integer_convertable< type > ||
+			                    detail::is_lua_number_convertable< type > )
 			{
 				return operations::is( state, index, vm_type::number );
 			}
@@ -209,7 +206,7 @@ namespace maan::stack
 		}
 		else if constexpr ( std::is_pointer_v< type > && std::is_class_v< type_noptr > )
 		{
-			const auto data = static_cast<detail::lua_userdata*>(lua_touserdata( state, index ));
+			const auto* data = static_cast<detail::lua_userdata*>(lua_touserdata( state, index ));
 			return data->hash == static_cast<std::uintptr_t>(utilities::type_tag< type >::hash());
 		}
 		else
@@ -220,7 +217,7 @@ namespace maan::stack
 	}
 
 	template< typename checked_type >
-	MAAN_INLINE std::string_view name( [[maybe_unused]] lua_State* state, [[maybe_unused]] int&& index )
+	MAAN_INLINE std::string_view name( [[maybe_unused]] lua_State* state, [[maybe_unused]] int index )
 	{
 		using type = std::remove_cvref_t< checked_type >;
 		using type_noptr = std::remove_pointer_t< type >;

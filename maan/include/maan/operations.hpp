@@ -92,7 +92,8 @@ namespace maan::operations
 
     inline void perform_gc_step( lua_State* state )
     {
-        lua_gc( state, LUA_GCSTEP, 150 );
+		static constexpr auto step_ratio = 150;
+        lua_gc( state, LUA_GCSTEP, step_ratio );
     }
 
     inline int error_handler( lua_State* state )
@@ -144,9 +145,11 @@ namespace maan::operations
                     clear( state );
                     return -3;
                 }
+	            default:
+				{
+		            utilities::assume_unreachable();
+				}
             }
-
-            utilities::assume_unreachable();
         }
     }
 
@@ -195,9 +198,11 @@ namespace maan::operations
                     clear( state );
                     return -3;
                 }
+				default:
+				{
+					utilities::assume_unreachable();
+				}
             }
-
-            utilities::assume_unreachable();
         }
     }
 
@@ -212,25 +217,6 @@ namespace maan::operations
                 [[likely]]
         {
             return pcall( state, 0 );
-        }
-        else
-        {
-            if ( result == LUA_ERRSYNTAX )
-            {
-                return -1;
-            }
-
-            clear( state );
-            return -1;
-        }
-    }
-
-    inline int execute( lua_State* state, const char* name, const char* code, size_t size, int nargs, int nresults )
-    {
-        if ( const auto result = luaL_loadbuffer( state, code, size, name ); result == LUA_OK )
-                [[likely]]
-        {
-            return pcall( state, nargs, nresults );
         }
         else
         {
