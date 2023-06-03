@@ -66,7 +66,7 @@ namespace maan::stack
 	concept is_lua_pushable =
 	requires( T )
 	{
-		requires std::is_same_v< void, T > || // can always push nothing onto the stack
+		requires std::is_void_v< T > || // can always push nothing onto the stack
 		         detail::is_lua_fundamental_convertable< T > || // fundamental cpp and lua types
 		         detail::is_lua_fundamental_convertable< std::remove_pointer< T > > ||
 		         detail::is_lua_pushable_pointer< T >;

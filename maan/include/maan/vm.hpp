@@ -55,26 +55,9 @@ namespace maan
 		{
 			using cvtype = std::remove_cvref_t< type >;
 
-			if constexpr ( std::is_class_v< cvtype > && utilities::member_countable< cvtype > )
+			if constexpr ( aggregate::is_lua_convertable< cvtype > )
 			{
-				static constexpr auto count = utilities::member_count< cvtype >();
-
-				const auto stack_start_index = operations::abs( state, index );
-
-				const auto fn = [this, stack_start_index]< typename... types >()
-				{
-					std::tuple< types... > member_values;
-					aggregate::set_tuple( state, stack_start_index, member_values );
-
-					const auto fn = []( auto&& ... params ) -> cvtype
-					{
-						return cvtype{ params... };
-					};
-
-					return std::apply( fn, member_values );
-				};
-
-				return utilities::visit_members_types < type > ( type{}, fn );
+				return aggregate::get< type >( state, index );
 			}
 			else
 			{
@@ -87,26 +70,9 @@ namespace maan
 		{
 			using cvtype = std::remove_cvref_t< type >;
 
-			if constexpr ( std::is_class_v< cvtype > && utilities::member_countable< cvtype > )
+			if constexpr ( aggregate::is_lua_convertable< cvtype > )
 			{
-				static constexpr auto count = utilities::member_count< cvtype >();
-
-				const auto stack_size = operations::size( state );
-				const auto start_index = operations::abs( state, index );
-				const auto stop_index = start_index + count - 1;
-
-				if ( stop_index > stack_size )
-						[[unlikely]]
-				{
-					return false;
-				}
-
-				const auto fn = [this, start_index]< typename... types >()
-				{
-					return aggregate::check< 0, types... >( state, start_index );
-				};
-
-				return utilities::visit_members_types < type > ( type{}, fn );
+				return aggregate::is< type >( state, index );
 			}
 			else
 			{
@@ -119,12 +85,9 @@ namespace maan
 			using type = decltype( value );
 			using cvtype = std::remove_cvref_t< type >;
 
-			if constexpr ( std::is_class_v< cvtype > && utilities::member_countable< cvtype > )
+			if constexpr ( aggregate::is_lua_convertable< cvtype > )
 			{
-				utilities::visit_members( value, [this]( auto&& ... members )
-				{
-					(stack::push( state, members ), ...);
-				} );
+				return aggregate::push( state, std::forward< type >( value ) );
 			}
 			else if constexpr ( function::is_function< type > )
 			{
@@ -139,6 +102,8 @@ namespace maan
 		template< int nresults = LUA_MULTRET, typename... types >
 		int call( types&& ... args ) const
 		{
+			using info = function::function_info< void( types... ) >;
+
 			constexpr int param_count = sizeof...( types );
 			if constexpr ( param_count != 0 )
 			{
@@ -147,11 +112,11 @@ namespace maan
 
 			if constexpr ( nresults == LUA_MULTRET )
 			{
-				return operations::pcall( state, param_count );
+				return operations::pcall( state, info::requirements.stack_slot_count );
 			}
 			else
 			{
-				return operations::pcall( state, param_count, nresults );
+				return operations::pcall( state, info::requirements.stack_slot_count, nresults );
 			}
 		}
 

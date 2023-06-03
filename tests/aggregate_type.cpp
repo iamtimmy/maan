@@ -34,3 +34,25 @@ TEST_CASE( "aggregate type", "[types]" )
 	REQUIRE( v.a == 100.f );
 	REQUIRE( v.b == 100.f );
 }
+
+TEST_CASE( "aggregate types in functions", "[types]" )
+{
+	auto vm = maan::vm();
+
+	vm.push( +[]( vec2 a ) -> vec2
+	{
+		return a;
+	} );
+
+	REQUIRE( vm.stack_size() == 1 );
+
+	const auto result = vm.call( vec2{ 100.f, 100.f } );
+	if ( result == -1 )
+	{
+		CATCH_ERROR( vm.get< std::string >( -1 ) );
+	}
+
+	REQUIRE( vm.stack_size() == 2 );
+	REQUIRE( vm.get< float >( -1 ) == 100.f );
+	REQUIRE( vm.get< float >( -2 ) == 100.f );
+}

@@ -2,9 +2,6 @@
 
 #include <maan.hpp>
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "cppcoreguidelines-avoid-do-while"
-
 TEST_CASE( "basic functions", "[functions]" )
 {
     auto vm = maan::vm();
@@ -25,5 +22,3 @@ TEST_CASE( "basic functions", "[functions]" )
     REQUIRE( vm.is< float >( -1 ) == true );
     REQUIRE( vm.get< float >( -1 ) == 200.f );
 }
-
-#pragma clang diagnostic pop
