@@ -13,7 +13,6 @@ include-directories = ["luajit/include", "src/include"]
 link-libraries = ["lua51"]
 x64.link-directories = ["luajit/x64/lib"]
 x32.link-directories = ["luajit/x32/lib"]
-arm64.link-directories = ["luajit/arm64/lib"]
 
 [target.tests]
 type = "executable"
