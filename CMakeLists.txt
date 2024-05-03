@@ -24,9 +24,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	configure_file(cmake.toml cmake.toml COPYONLY)
 endif()
 
-# Variables
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 project(maan
 	LANGUAGES
 		C
@@ -35,25 +32,25 @@ project(maan
 
 include(FetchContent)
 
-message(STATUS "Fetching Catch2 (v3.3.2)...")
+message(STATUS "Fetching Catch2 (v3.5.4)...")
 FetchContent_Declare(Catch2
 	GIT_REPOSITORY
 		"https://github.com/catchorg/Catch2"
 	GIT_TAG
-		v3.3.2
+		v3.5.4
 )
 FetchContent_MakeAvailable(Catch2)
 
 # Target: maan
 set(maan_SOURCES
-	"maan/include/maan.hpp"
-	"maan/include/maan/aggregate.hpp"
-	"maan/include/maan/function.hpp"
-	"maan/include/maan/operations.hpp"
-	"maan/include/maan/stack.hpp"
-	"maan/include/maan/utilities.hpp"
-	"maan/include/maan/vm.hpp"
-	"maan/include/maan/vm_type.hpp"
+	"src/include/maan.hpp"
+	"src/include/maan/aggregate.hpp"
+	"src/include/maan/function.hpp"
+	"src/include/maan/operations.hpp"
+	"src/include/maan/stack.hpp"
+	"src/include/maan/utilities.hpp"
+	"src/include/maan/vm.hpp"
+	"src/include/maan/vm_type.hpp"
 )
 
 add_library(maan INTERFACE)
@@ -67,7 +64,7 @@ target_compile_features(maan INTERFACE
 
 target_include_directories(maan INTERFACE
 	"luajit/include"
-	"maan/include"
+	"src/include"
 )
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8) # x64
@@ -78,7 +75,7 @@ endif()
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 4) # x32
 	target_link_directories(maan INTERFACE
-		"luajit/x86/lib"
+		"luajit/x32/lib"
 	)
 endif()
 

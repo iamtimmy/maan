@@ -2,6 +2,4 @@
 
 #include <maan/vm.hpp>
 
-namespace maan
-{
-}
+namespace maan {}

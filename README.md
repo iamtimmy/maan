@@ -21,7 +21,7 @@ git submodule update --init --recursive
    - Optional: Have a look at the build script and the one in `<clone location>/luajit/msvcbuild.bat`
      for some extra compiler options
 4. compile with `.\msvcbuild.bat static`
-5. Navigat to `<clone location>/luajit/`
+5. Navigate to `<clone location>/luajit/`
 6. gather the required headers with `.\gatherinclude.bat`
 7. gather the compiler output with `.\gathercompile.bat <target architecture>`
 

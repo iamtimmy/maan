@@ -1,0 +1,108 @@
+BasedOnStyle: Google
+
+AccessModifierOffset: -2
+
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: "Empty"
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: "Empty"
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: "None"
+AlignConsecutiveDeclarations: "None"
+AlignEscapedNewlines: Right
+AlignOperands: true
+AlignTrailingComments: true
+
+BinPackArguments: true
+BinPackParameters: true
+
+BraceWrapping:
+  AfterControlStatement: MultiLine
+  AfterClass: false
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: "Yes"
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Attach
+BreakBeforeInheritanceComma: false
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializersBeforeComma: false
+BreakConstructorInitializers: BeforeColon
+BreakStringLiterals: true
+
+ColumnLimit: 150
+# CommentPragmas:  '^ IWYU pragma:'
+CompactNamespaces: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+Cpp11BracedListStyle: true
+DerivePointerAlignment: false
+DisableFormat: false
+ExperimentalAutoDetectBinPacking: false
+FixNamespaceComments: true
+IncludeBlocks: Preserve
+IndentCaseLabels: false
+IndentPPDirectives: None
+IndentWidth: 2
+ConstructorInitializerIndentWidth: 2
+ContinuationIndentWidth: 2
+
+RequiresClausePosition: OwnLine
+IndentRequiresClause: true
+IndentWrappedFunctionNames: false
+KeepEmptyLinesAtTheStartOfBlocks: true
+MacroBlockBegin: ''
+MacroBlockEnd: ''
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: None
+
+PenaltyBreakAssignment: 2
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 60
+
+PointerAlignment: Left
+ReflowComments: true
+
+SortIncludes: Never
+SortUsingDeclarations: true
+
+SpaceAfterCStyleCast: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: false
+SpacesInContainerLiterals: true
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+TabWidth: 4
+UseTab: Never
+
+Language: Cpp
+Standard: Latest
+
+
