@@ -45,12 +45,15 @@ FetchContent_MakeAvailable(Catch2)
 set(maan_SOURCES
 	"src/include/maan.hpp"
 	"src/include/maan/aggregate.hpp"
-	"src/include/maan/function.hpp"
+	"src/include/maan/function_type.hpp"
+	"src/include/maan/interface.hpp"
+	"src/include/maan/native_function.hpp"
 	"src/include/maan/operations.hpp"
 	"src/include/maan/stack.hpp"
 	"src/include/maan/utilities.hpp"
 	"src/include/maan/vm.hpp"
 	"src/include/maan/vm_type.hpp"
+	"src/include/maan/vm_view.hpp"
 )
 
 add_library(maan INTERFACE)

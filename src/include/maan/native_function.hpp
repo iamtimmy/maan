@@ -6,17 +6,17 @@
 #include <maan/aggregate.hpp>
 #include <maan/stack.hpp>
 
-namespace maan::function {
+namespace maan::native_function {
 struct function_requirements {
   size_t argument_count;
   size_t stack_slot_count;
 };
 
 template <typename return_type, typename... types>
-struct function_info;
+struct info;
 
 template <typename return_type, typename... types>
-struct function_info<return_type(types...)> {
+struct info<return_type(types...)> {
   using cvreturn_type = std::remove_cvref_t<return_type>;
   using tuple_type = std::tuple<types...>;
 
@@ -67,22 +67,22 @@ struct function_info<return_type(types...)> {
 };
 
 template <typename return_type, typename... types>
-struct function_info<return_type (*)(types...)> : function_info<return_type(types...)> {};
+struct info<return_type (*)(types...)> : info<return_type(types...)> {};
 
 template <typename return_type, typename... types>
-struct function_info<return_type (*const)(types...)> : function_info<return_type(types...)> {};
+struct info<return_type (*const)(types...)> : info<return_type(types...)> {};
 
 template <typename clazz, typename return_type, typename... types>
-struct function_info<return_type (clazz::*)(types...)> : function_info<return_type(clazz*, types...)> {};
+struct info<return_type (clazz::*)(types...)> : info<return_type(clazz*, types...)> {};
 
 template <typename clazz, typename return_type, typename... types>
-struct function_info<return_type (clazz::*)(types...) const> : function_info<return_type(clazz*, types...)> {};
+struct info<return_type (clazz::*)(types...) const> : info<return_type(clazz*, types...)> {};
 
 template <typename type>
 concept is_function = requires(type) { requires std::is_function_v<std::remove_pointer_t<std::remove_cvref_t<type>>>; };
 
-static void push(lua_State* state, is_function auto&& function) {
-  using info = function_info<std::remove_cvref_t<decltype(function)>>;
+MAAN_INLINE void push(lua_State* state, is_function auto&& function) {
+  using info = info<std::remove_cvref_t<decltype(function)>>;
 
   static_assert(stack::is_lua_pushable<typename info::cvreturn_type> || aggregate::is_lua_convertable<typename info::cvreturn_type>,
                 "wrapped function has unsupported return type");

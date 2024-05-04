@@ -1,7 +1,7 @@
 #pragma once
 
 namespace maan {
-enum class vm_type {
+enum class vm_type : int8_t {
   none = -1,
   nil = 0,
   boolean = 1,

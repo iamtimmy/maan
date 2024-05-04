@@ -4,12 +4,12 @@
 #include <utility>
 
 #include <lua.hpp>
-#include <maan/aggregate.hpp>
-#include <maan/function.hpp>
-#include <maan/stack.hpp>
+#include <maan/interface.hpp>
+#include <maan/function_type.hpp>
+#include <maan/native_function.hpp>
 
 namespace maan {
-class vm {
+class MAAN_TRIVIAL_ABI vm {
   lua_State* state;
 
 public:
@@ -45,10 +45,10 @@ public:
   [[nodiscard]] decltype(auto) get(int index) const {
     using cvtype = std::remove_cvref_t<type>;
 
-    if constexpr (aggregate::is_lua_convertable<cvtype>) {
-      return aggregate::get<type>(state, index);
+    if constexpr (std::is_same_v<cvtype, function_type>) {
+      return function_type(state, index);
     } else {
-      return stack::get<type>(state, index);
+      return interface::get<type>(state, index);
     }
   }
 
@@ -56,40 +56,25 @@ public:
   [[nodiscard]] bool is(int index) const {
     using cvtype = std::remove_cvref_t<type>;
 
-    if constexpr (aggregate::is_lua_convertable<cvtype>) {
-      return aggregate::is<type>(state, index);
+    if constexpr (std::is_same_v<cvtype, function_type>) {
+      return operations::is(state, index, vm_type::function);
     } else {
-      return stack::is<type>(state, index);
+      return interface::is<type>(state, index);
     }
   }
 
-  void push(auto&& value) const {
-    using type = decltype(value);
-    using cvtype = std::remove_cvref_t<type>;
-
-    if constexpr (aggregate::is_lua_convertable<cvtype>) {
-      return aggregate::push(state, std::forward<type>(value));
-    } else if constexpr (function::is_function<type>) {
-      return function::push(state, std::forward<type>(value));
+  template <typename type>
+  void push(type&& value) const {
+    if constexpr (native_function::is_function<type>) {
+      return native_function::push(state, std::forward<type>(value));
     } else {
-      return stack::push(state, std::forward<type>(value));
+      return interface::push(state, std::forward<type>(value));
     }
   }
 
   template <int result_count = LUA_MULTRET, typename... types>
   int call(types&&... args) const {
-    using info = function::function_info<void(types...)>;
-
-    constexpr int param_count = sizeof...(types);
-    if constexpr (param_count != 0) {
-      (push(std::forward<types>(args)), ...);
-    }
-
-    if constexpr (result_count == LUA_MULTRET) {
-      return operations::pcall(state, info::requirements.stack_slot_count);
-    } else {
-      return operations::pcall(state, info::requirements.stack_slot_count, result_count);
-    }
+    return interface::call<result_count>(state, std::forward<types>(args)...);
   }
 
   vm() : state{luaL_newstate()} {
@@ -118,6 +103,8 @@ public:
     return *this;
   }
 
+  // delete the copy contructor and copy assignment operator
+  // there is no good way to duplicate lua's state
   vm(vm const&) = delete;
   vm& operator=(vm const&) = delete;
 };
