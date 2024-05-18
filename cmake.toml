@@ -11,14 +11,14 @@ sources = ["src/include/**.hpp"]
 compile-features = ["cxx_std_23"]
 include-directories = ["luajit/include", "src/include"]
 link-libraries = ["lua51"]
-x64.link-directories = ["luajit/x64/lib"]
-x32.link-directories = ["luajit/x32/lib"]
 
 [target.tests]
 type = "executable"
-sources = ["tests/*.cpp"]
+sources = ["tests/**.cpp"]
 link-libraries = ["Catch2::Catch2WithMain", "maan"]
 compile-features = ["cxx_std_23"]
+x64.link-directories = ["luajit/x64/lib"]
+x32.link-directories = ["luajit/x32/lib"]
 cmake-after = """
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)

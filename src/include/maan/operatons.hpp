@@ -6,7 +6,7 @@
 #include <maan/utilities.hpp>
 #include <maan/vm_type_tag.hpp>
 
-namespace maan::vm_operation {
+namespace maan::operations {
 MAAN_INLINE inline int size(lua_State* state) {
   return lua_gettop(state);
 }
@@ -18,7 +18,7 @@ MAAN_INLINE constexpr int constant_abs(lua_State* state) {
   } else if constexpr (index > 0) {
     return index;
   } else {
-    static_assert("bad maan::vm_operation::constant_abs index");
+    static_assert("bad maan::operations::constant_abs index");
   }
 }
 
@@ -44,6 +44,10 @@ MAAN_INLINE inline void remove(lua_State* state, int index) {
 
 MAAN_INLINE inline void insert(lua_State* state, int index) {
   lua_insert(state, index);
+}
+
+MAAN_INLINE inline void copy(lua_State* state, int index) {
+  lua_pushvalue(state, index);
 }
 
 MAAN_INLINE inline vm_type_tag type(lua_State* state, int index) {
@@ -85,7 +89,7 @@ MAAN_INLINE inline int pcall(lua_State* state, int nargs, int result_count) {
   // - params
   // - chunk
 
-  // determine position of the error handler function
+  // determine position of the error handler vm_function
   const auto error_function_pos = size(state) - nargs;
   lua_pushcclosure(state, error_handler, 0);
 
@@ -129,7 +133,7 @@ MAAN_INLINE inline int pcall(lua_State* state, int nargs) {
   // - params
   // - chunk
 
-  // determine position of the error handler function
+  // determine position of the error handler vm_function
   const auto error_function_pos = size(state) - nargs;
   lua_pushcclosure(state, error_handler, 0);
 
@@ -183,4 +187,4 @@ MAAN_INLINE inline int execute(lua_State* state, const char* name, const char* c
     return -1;
   }
 }
-} // namespace maan::vm_operation
+} // namespace maan::operations

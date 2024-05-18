@@ -30,14 +30,28 @@ TEST_CASE("stack functions", "[functions]") {
   REQUIRE(vm.execute("code", code) == 1);
   REQUIRE(vm.stack_size() == 1);
 
-  REQUIRE(vm.is<maan::function_type>(-1));
+  REQUIRE(vm.is<maan::vm_function>(-1) == true);
 
-  const auto fn = vm.get<maan::function_type>(-1);
-  REQUIRE(fn.call(100) == 1);
+  {
+    const auto fn = vm.get<maan::vm_function>(-1);
+    REQUIRE(fn.call(100) == 1);
+    REQUIRE(vm.stack_size() == 2);
 
-  REQUIRE(vm.is<int>(-1));
-  REQUIRE(vm.get<int>(-1) == 110);
+    REQUIRE(vm.is<int>(-1));
+    REQUIRE(vm.get<int>(-1) == 110);
 
-  vm.pop();
+    vm.pop();
+    REQUIRE(vm.stack_size() == 1);
+
+    REQUIRE(fn.call(200) == 1);
+    REQUIRE(vm.stack_size() == 2);
+
+    REQUIRE(vm.is<int>(-1));
+    REQUIRE(vm.get<int>(-1) == 210);
+
+    vm.pop();
+    REQUIRE(vm.stack_size() == 1);
+  }
+
   REQUIRE(vm.stack_size() == 0);
 }

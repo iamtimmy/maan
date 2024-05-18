@@ -4,7 +4,7 @@
 
 #include <concepts>
 
-#include <maan/vm_op.hpp>
+#include <maan/operatons.hpp>
 #include <maan/utilities.hpp>
 
 namespace maan::vm_type {
@@ -123,15 +123,15 @@ MAAN_INLINE bool is(lua_State* state, int index)
   using type_noptr = std::remove_pointer_t<type>;
 
   if constexpr (std::is_same_v<void, type>) {
-    const auto type = vm_operation::type(state, index);
+    const auto type = operations::type(state, index);
     return type == vm_type_tag::none || type == vm_type_tag::nil;
   } else if constexpr (detail::is_lua_fundamental_convertable<type>) {
     if constexpr (std::is_same_v<bool, type>) {
-      return vm_operation::is(state, index, vm_type_tag::boolean);
+      return operations::is(state, index, vm_type_tag::boolean);
     } else if constexpr (detail::is_lua_integer_convertable<type> || detail::is_lua_number_convertable<type>) {
-      return vm_operation::is(state, index, vm_type_tag::number);
+      return operations::is(state, index, vm_type_tag::number);
     } else if constexpr (detail::is_lua_string_convertable<type>) {
-      return vm_operation::is(state, index, vm_type_tag::string);
+      return operations::is(state, index, vm_type_tag::string);
     }
   } else if constexpr (std::is_pointer_v<type> && std::is_class_v<type_noptr>) {
     const auto* data = static_cast<detail::lua_userdata*>(lua_touserdata(state, index));

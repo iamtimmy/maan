@@ -45,15 +45,15 @@ FetchContent_MakeAvailable(Catch2)
 set(maan_SOURCES
 	"src/include/maan.hpp"
 	"src/include/maan/aggregate.hpp"
-	"src/include/maan/function_type.hpp"
 	"src/include/maan/native_function.hpp"
+	"src/include/maan/operatons.hpp"
 	"src/include/maan/stack.hpp"
 	"src/include/maan/utilities.hpp"
 	"src/include/maan/vm.hpp"
-	"src/include/maan/vm_op.hpp"
+	"src/include/maan/vm_function.hpp"
+	"src/include/maan/vm_table.hpp"
 	"src/include/maan/vm_type_tag.hpp"
 	"src/include/maan/vm_types.hpp"
-	"src/include/maan/vm_view.hpp"
 )
 
 add_library(maan INTERFACE)
@@ -70,18 +70,6 @@ target_include_directories(maan INTERFACE
 	"src/include"
 )
 
-if(CMAKE_SIZEOF_VOID_P EQUAL 8) # x64
-	target_link_directories(maan INTERFACE
-		"luajit/x64/lib"
-	)
-endif()
-
-if(CMAKE_SIZEOF_VOID_P EQUAL 4) # x32
-	target_link_directories(maan INTERFACE
-		"luajit/x32/lib"
-	)
-endif()
-
 target_link_libraries(maan INTERFACE
 	lua51
 )
@@ -96,6 +84,7 @@ set(tests_SOURCES
 	"tests/functions.cpp"
 	"tests/main.cpp"
 	"tests/stack.cpp"
+	"tests/tables.cpp"
 	cmake.toml
 )
 
@@ -107,6 +96,18 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${tests_SOURCES})
 target_compile_features(tests PRIVATE
 	cxx_std_23
 )
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 8) # x64
+	target_link_directories(tests PRIVATE
+		"luajit/x64/lib"
+	)
+endif()
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 4) # x32
+	target_link_directories(tests PRIVATE
+		"luajit/x32/lib"
+	)
+endif()
 
 target_link_libraries(tests PRIVATE
 	Catch2::Catch2WithMain

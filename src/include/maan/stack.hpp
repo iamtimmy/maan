@@ -1,7 +1,7 @@
 #pragma once
 
 #include <maan/utilities.hpp>
-#include <maan/vm_op.hpp>
+#include <maan/operatons.hpp>
 #include <maan/vm_types.hpp>
 #include <maan/aggregate.hpp>
 #include <maan/native_function.hpp>
@@ -50,9 +50,9 @@ template <int result_count = LUA_MULTRET, typename... types>
   }
 
   if constexpr (result_count == LUA_MULTRET) {
-    return vm_operation::pcall(state, info::requirements.stack_slot_count);
+    return operations::pcall(state, info::requirements.stack_slot_count);
   } else {
-    return vm_operation::pcall(state, info::requirements.stack_slot_count, result_count);
+    return operations::pcall(state, info::requirements.stack_slot_count, result_count);
   }
 }
 } // namespace maan::stack
