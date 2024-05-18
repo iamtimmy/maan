@@ -9,14 +9,10 @@
 #include <maan/native_function.hpp>
 
 namespace maan {
-class MAAN_TRIVIAL_ABI vm {
+class vm {
   lua_State* state;
 
 public:
-  void release() {
-    state = nullptr;
-  }
-
   [[nodiscard]] bool running() const {
     return state != nullptr;
   }
@@ -75,6 +71,14 @@ public:
   template <int result_count = LUA_MULTRET, typename... types>
   int call(types&&... args) const {
     return interface::call<result_count>(state, std::forward<types>(args)...);
+  }
+
+  void release() {
+    state = nullptr;
+  }
+
+  [[nodiscard]] lua_State* set_state(lua_State* new_state) {
+    return std::exchange(state, new_state);
   }
 
   vm() : state{luaL_newstate()} {
