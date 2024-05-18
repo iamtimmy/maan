@@ -4,6 +4,6 @@
 #include <maan/vm_view.hpp>
 #include <maan/function_type.hpp>
 
-#include <maan/interface.hpp>
+#include <maan/stack.hpp>
 
 namespace maan {}

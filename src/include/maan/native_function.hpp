@@ -4,7 +4,7 @@
 
 #include <lua.hpp>
 #include <maan/aggregate.hpp>
-#include <maan/stack.hpp>
+#include <maan/vm_types.hpp>
 
 namespace maan::native_function {
 struct function_requirements {
@@ -29,7 +29,7 @@ struct info<return_type(types...)> {
       return {index, result};
     } else {
       using arg_type = std::remove_cvref_t<std::tuple_element_t<index, tuple_type>>;
-      static_assert(stack::is_lua_pushable<arg_type> || aggregate::is_lua_convertable<arg_type>, "wrapped function has unsupported argument type");
+      static_assert(vm_type::is_lua_pushable<arg_type> || aggregate::is_lua_convertable<arg_type>, "wrapped function has unsupported argument type");
 
       if constexpr (aggregate::is_lua_convertable<arg_type>) {
         return check<index + 1, result + aggregate::stack_size<arg_type>()>();
@@ -53,14 +53,14 @@ struct info<return_type(types...)> {
           return set_tuple<tuple_index + 1, lua_index + aggregate::stack_size<arg_type>()>(state, tuple);
         }
       } else {
-        if (stack::is<arg_type>(state, lua_index + 1)) [[likely]] {
-          std::get<tuple_index>(tuple) = stack::get<arg_type>(state, lua_index + 1);
+        if (vm_type::is<arg_type>(state, lua_index + 1)) [[likely]] {
+          std::get<tuple_index>(tuple) = vm_type::get<arg_type>(state, lua_index + 1);
           return set_tuple<tuple_index + 1, lua_index + 1>(state, tuple);
         }
       }
 
       luaL_error(state, "invalid argument %d { got: %s | expected: %s }", lua_index, luaL_typename(state, lua_index + 1),
-                 stack::name<arg_type>(state, lua_index + 1));
+                 vm_type::name<arg_type>(state, lua_index + 1));
       utilities::assume_unreachable();
     }
   }
@@ -84,7 +84,7 @@ concept is_function = requires(type) { requires std::is_function_v<std::remove_p
 MAAN_INLINE void push(lua_State* state, is_function auto&& function) {
   using info = info<std::remove_cvref_t<decltype(function)>>;
 
-  static_assert(stack::is_lua_pushable<typename info::cvreturn_type> || aggregate::is_lua_convertable<typename info::cvreturn_type>,
+  static_assert(vm_type::is_lua_pushable<typename info::cvreturn_type> || aggregate::is_lua_convertable<typename info::cvreturn_type>,
                 "wrapped function has unsupported return type");
 
   struct call_info {
@@ -97,7 +97,7 @@ MAAN_INLINE void push(lua_State* state, is_function auto&& function) {
   static lua_CFunction const call_wrapper = +[](lua_State* state) -> int {
     static constexpr auto requirements = info::requirements;
 
-    if (const auto stack_size = operations::size(state); requirements.stack_slot_count != stack_size) {
+    if (const auto stack_size = vm_operation::size(state); requirements.stack_slot_count != stack_size) {
       luaL_error(state, "invalid arguments { expected: %d | stack_size: %d }", requirements.stack_slot_count, stack_size);
       utilities::assume_unreachable();
     }
@@ -117,7 +117,7 @@ MAAN_INLINE void push(lua_State* state, is_function auto&& function) {
         aggregate::push(state, std::apply(call->ptr, std::move(params)));
         return aggregate::stack_size<typename info::cvreturn_type>();
       } else {
-        stack::push(state, std::apply(call->ptr, std::move(params)));
+        vm_type::push(state, std::apply(call->ptr, std::move(params)));
         return 1;
       }
     }

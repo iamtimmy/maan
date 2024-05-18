@@ -4,7 +4,7 @@
 #include <utility>
 
 #include <lua.hpp>
-#include <maan/interface.hpp>
+#include <maan/stack.hpp>
 #include <maan/function_type.hpp>
 #include <maan/native_function.hpp>
 
@@ -18,7 +18,7 @@ public:
   }
 
   [[nodiscard]] size_t working_set() const {
-    return operations::working_set(state);
+    return vm_operation::working_set(state);
   }
 
   [[nodiscard]] lua_State* get_state() const {
@@ -26,15 +26,15 @@ public:
   }
 
   [[nodiscard]] size_t stack_size() const {
-    return operations::size(state);
+    return vm_operation::size(state);
   }
 
   void pop(int n = 1) const {
-    operations::pop(state, n);
+    vm_operation::pop(state, n);
   }
 
   [[nodiscard]] int execute(std::string_view name, std::string_view code) const {
-    return operations::execute(state, name.data(), code.data(), code.size());
+    return vm_operation::execute(state, name.data(), code.data(), code.size());
   }
 
   template <typename type>
@@ -44,7 +44,7 @@ public:
     if constexpr (std::is_same_v<cvtype, function_type>) {
       return function_type(state, index);
     } else {
-      return interface::get<type>(state, index);
+      return stack::get<type>(state, index);
     }
   }
 
@@ -53,9 +53,9 @@ public:
     using cvtype = std::remove_cvref_t<type>;
 
     if constexpr (std::is_same_v<cvtype, function_type>) {
-      return operations::is(state, index, vm_type::function);
+      return vm_operation::is(state, index, vm_type_tag::function);
     } else {
-      return interface::is<type>(state, index);
+      return stack::is<type>(state, index);
     }
   }
 
@@ -64,20 +64,20 @@ public:
     if constexpr (native_function::is_function<type>) {
       return native_function::push(state, std::forward<type>(value));
     } else {
-      return interface::push(state, std::forward<type>(value));
+      return stack::push(state, std::forward<type>(value));
     }
   }
 
   template <int result_count = LUA_MULTRET, typename... types>
   int call(types&&... args) const {
-    return interface::call<result_count>(state, std::forward<types>(args)...);
+    return stack::call<result_count>(state, std::forward<types>(args)...);
   }
 
   void release() {
     state = nullptr;
   }
 
-  [[nodiscard]] lua_State* set_state(lua_State* new_state) {
+  lua_State* set_state(lua_State* new_state) {
     return std::exchange(state, new_state);
   }
 

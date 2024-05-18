@@ -7,7 +7,7 @@ Catch2 = { git = "https://github.com/catchorg/Catch2", tag = "v3.5.4" }
 
 [target.maan]
 type = "interface"
-sources = ["src/include/*.hpp", "src/include/maan/*.hpp"]
+sources = ["src/include/**.hpp"]
 compile-features = ["cxx_std_23"]
 include-directories = ["luajit/include", "src/include"]
 link-libraries = ["lua51"]

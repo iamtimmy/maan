@@ -4,9 +4,9 @@
 
 #include <lua.hpp>
 #include <maan/utilities.hpp>
-#include <maan/vm_type.hpp>
+#include <maan/vm_type_tag.hpp>
 
-namespace maan::operations {
+namespace maan::vm_operation {
 MAAN_INLINE inline int size(lua_State* state) {
   return lua_gettop(state);
 }
@@ -18,7 +18,7 @@ MAAN_INLINE constexpr int constant_abs(lua_State* state) {
   } else if constexpr (index > 0) {
     return index;
   } else {
-    static_assert("bad maan::stack::constant_abs index");
+    static_assert("bad maan::vm_operation::constant_abs index");
   }
 }
 
@@ -46,11 +46,11 @@ MAAN_INLINE inline void insert(lua_State* state, int index) {
   lua_insert(state, index);
 }
 
-MAAN_INLINE inline vm_type type(lua_State* state, int index) {
-  return static_cast<vm_type>(lua_type(state, index));
+MAAN_INLINE inline vm_type_tag type(lua_State* state, int index) {
+  return static_cast<vm_type_tag>(lua_type(state, index));
 }
 
-MAAN_INLINE inline bool is(lua_State* state, int index, vm_type type) {
+MAAN_INLINE inline bool is(lua_State* state, int index, vm_type_tag type) {
   return lua_type(state, index) == utilities::to_underlying(type);
 }
 
@@ -171,7 +171,7 @@ MAAN_INLINE inline int pcall(lua_State* state) {
 }
 
 MAAN_INLINE inline int execute(lua_State* state, const char* name, const char* code, size_t size) {
-  if (const auto result = luaL_loadbuffer(state, code, size, name); result == LUA_OK) [[likely]]
+  if (const auto result = luaL_loadbuffer(state, code, size, name); result == LUA_OK)
   {
     return pcall(state, 0);
   } else {
@@ -183,4 +183,4 @@ MAAN_INLINE inline int execute(lua_State* state, const char* name, const char* c
     return -1;
   }
 }
-} // namespace maan::operations
+} // namespace maan::vm_operation

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <maan/stack.hpp>
+#include <maan/vm_types.hpp>
 #include <maan/utilities.hpp>
 #include <tuple>
 
@@ -21,7 +21,7 @@ static void set_tuple(lua_State* state, int stack_index, std::tuple<types...>& t
   } else {
     using argument_type = std::tuple_element_t<index, std::tuple<types...>>;
 
-    std::get<index>(tuple) = stack::get<argument_type>(state, stack_index + index);
+    std::get<index>(tuple) = vm_type::get<argument_type>(state, stack_index + index);
     return set_tuple<index + 1>(state, stack_index, tuple);
   }
 }
@@ -33,7 +33,7 @@ static bool check(lua_State* state, int stack_index) {
   } else {
     using argument_type = std::tuple_element_t<index, std::tuple<types...>>;
 
-    if (!stack::is<argument_type>(state, stack_index + index)) [[unlikely]] {
+    if (!vm_type::is<argument_type>(state, stack_index + index)) [[unlikely]] {
       return false;
     } else {
       return check<index + 1, types...>(state, stack_index);
@@ -47,8 +47,8 @@ static bool is(lua_State* state, int index) {
 
   static constexpr auto count = utilities::member_count<cvtype>();
 
-  const auto stack_size = operations::size(state);
-  const auto start_index = operations::abs(state, index);
+  const auto stack_size = vm_operation::size(state);
+  const auto start_index = vm_operation::abs(state, index);
   const auto stop_index = start_index + count - 1;
 
   if (stop_index > stack_size) [[unlikely]] {
@@ -61,7 +61,7 @@ static bool is(lua_State* state, int index) {
 }
 
 static void push(lua_State* state, is_lua_convertable auto&& value) {
-  utilities::visit_members(std::forward<decltype(value)>(value), [state](auto&&... members) { (stack::push(state, members), ...); });
+  utilities::visit_members(std::forward<decltype(value)>(value), [state](auto&&... members) { (vm_type::push(state, members), ...); });
 }
 
 template <is_lua_convertable type>
@@ -69,7 +69,7 @@ static decltype(auto) get(lua_State* state, int index) {
   using cvtype = std::remove_cvref_t<type>;
   static constexpr auto count = stack_size<cvtype>();
 
-  const auto stack_start_index = operations::abs(state, index);
+  const auto stack_start_index = vm_operation::abs(state, index);
 
   const auto fn = [state, stack_start_index]<typename... types>() {
     std::tuple<types...> member_values;
