@@ -5,8 +5,8 @@
 
 #include <lua.hpp>
 #include <maan/stack.hpp>
-#include <maan/vm_function.hpp>
-#include <maan/vm_table.hpp>
+#include <maan/function.hpp>
+#include <maan/table.hpp>
 #include <maan/native_function.hpp>
 
 namespace maan {
@@ -42,8 +42,8 @@ public:
   [[nodiscard]] MAAN_INLINE decltype(auto) get(int index) const {
     using cvtype = std::remove_cvref_t<type>;
 
-    if constexpr (std::is_same_v<cvtype, vm_function>) {
-      return vm_function(state, index);
+    if constexpr (std::is_same_v<cvtype, function>) {
+      return function(state, index);
     } else {
       return stack::get<type>(state, index);
     }
@@ -53,7 +53,7 @@ public:
   [[nodiscard]] MAAN_INLINE bool is(int index) const {
     using cvtype = std::remove_cvref_t<type>;
 
-    if constexpr (std::is_same_v<cvtype, vm_function>) {
+    if constexpr (std::is_same_v<cvtype, function>) {
       return operations::is(state, index, vm_type_tag::function);
     } else {
       return stack::is<type>(state, index);
@@ -74,9 +74,9 @@ public:
     return stack::call<result_count>(state, std::forward<types>(args)...);
   }
 
-  [[nodiscard]] MAAN_INLINE vm_table get_globals() const {
+  [[nodiscard]] MAAN_INLINE table get_globals() const {
     lua_pushvalue(state, LUA_GLOBALSINDEX);
-    return vm_table(state, -1);
+    return table(state, -1);
   }
 
   MAAN_INLINE lua_State* set_state(lua_State* new_state) {

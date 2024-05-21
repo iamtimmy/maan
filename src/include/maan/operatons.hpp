@@ -89,7 +89,7 @@ MAAN_INLINE inline int pcall(lua_State* state, int nargs, int result_count) {
   // - params
   // - chunk
 
-  // determine position of the error handler vm_function
+  // determine position of the error handler function
   const auto error_function_pos = size(state) - nargs;
   lua_pushcclosure(state, error_handler, 0);
 
@@ -133,7 +133,7 @@ MAAN_INLINE inline int pcall(lua_State* state, int nargs) {
   // - params
   // - chunk
 
-  // determine position of the error handler vm_function
+  // determine position of the error handler function
   const auto error_function_pos = size(state) - nargs;
   lua_pushcclosure(state, error_handler, 0);
 

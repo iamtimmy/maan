@@ -4,7 +4,6 @@
 #include <maan/operatons.hpp>
 #include <maan/vm_types.hpp>
 #include <maan/aggregate.hpp>
-#include <maan/native_function.hpp>
 
 namespace maan::stack {
 template <typename type>
@@ -14,7 +13,7 @@ template <typename type>
   if constexpr (aggregate::is_lua_convertable<cvtype>) {
     return aggregate::is<type>(state, index);
   } else {
-    return vm_type::is<type>(state, index);
+    return vm_types::is<type>(state, index);
   }
 }
 
@@ -25,7 +24,7 @@ MAAN_INLINE void push(lua_State* state, type&& value) {
   if constexpr (aggregate::is_lua_convertable<cvtype>) {
     return aggregate::push(state, std::forward<type>(value));
   } else {
-    return vm_type::push(state, std::forward<type>(value));
+    return vm_types::push(state, std::forward<type>(value));
   }
 }
 
@@ -36,13 +35,28 @@ template <typename type>
   if constexpr (aggregate::is_lua_convertable<cvtype>) {
     return aggregate::get<type>(state, index);
   } else {
-    return vm_type::get<type>(state, index);
+    return vm_types::get<type>(state, index);
   }
 }
 
 template <int result_count = LUA_MULTRET, typename... types>
 [[nodiscard]] MAAN_INLINE int call(lua_State* state, types&&... args) {
-  using info = native_function::info<void(types...)>;
+  constexpr auto stack_slot_count = []<size_t index = 0, size_t result = 0>(this auto&& self) {
+    using tuple_type = std::tuple<types...>;
+
+    if constexpr (index == sizeof...(types)) {
+      return result;
+    } else {
+      using arg_type = std::remove_cvref_t<std::tuple_element_t<index, tuple_type>>;
+      static_assert(vm_types::is_lua_convertable<arg_type> || aggregate::is_lua_convertable<arg_type>, "call unknown argument");
+
+      if constexpr (aggregate::is_lua_convertable<arg_type>) {
+        return self.template operator()<index + 1, result + aggregate::stack_size<arg_type>()>();
+      } else {
+        return self.template operator()<index + 1, result + 1>();
+      }
+    }
+  }();
 
   constexpr int param_count = sizeof...(types);
   if constexpr (param_count != 0) {
@@ -50,9 +64,9 @@ template <int result_count = LUA_MULTRET, typename... types>
   }
 
   if constexpr (result_count == LUA_MULTRET) {
-    return operations::pcall(state, info::requirements.stack_slot_count);
+    return operations::pcall(state, stack_slot_count);
   } else {
-    return operations::pcall(state, info::requirements.stack_slot_count, result_count);
+    return operations::pcall(state, stack_slot_count, result_count);
   }
 }
 } // namespace maan::stack
