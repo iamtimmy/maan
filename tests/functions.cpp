@@ -70,26 +70,43 @@ TEST_CASE("nested stack functions", "[functions]") {
   REQUIRE(vm.is<maan::function>(-1) == true);
 
   {
-    const auto lambda = +[](maan::vm_function const& fn, int v) -> int {
-      const auto function = maan::function(fn);
+    const auto fn_lua = vm.get<maan::function>(-1);
+
+    const auto lambda = +[](maan::vm_function const fn_in, int v) -> int {
+      const auto function = maan::function(fn_in);
 
       REQUIRE(function.call(v) == 1);
 
-      REQUIRE(maan::vm_types::is<int>(fn.state, -1));
+      REQUIRE(maan::vm_types::is<int>(fn_in.state, -1));
 
-      const auto result = maan::vm_types::get<int>(fn.state, -1);
+      const auto result = maan::vm_types::get<int>(fn_in.state, -1);
       REQUIRE(result == 110);
       return result;
     };
 
-    const auto fn = vm.get<maan::function>(-1);
-    REQUIRE(fn.call(lambda, 100) == 1);
-    REQUIRE(vm.stack_size() == 2);
+    vm.push(lambda);
+
+    REQUIRE(vm.is<maan::vm_function>(-1) == true);
+
+    const auto lambda_ref = vm.get<maan::vm_function>(-1);
+
+    if (const auto test = fn_lua.call(lambda_ref, 100); test == -1) {
+      const auto err = vm.get<std::string>(-1);
+      REQUIRE(err == "function call failed");
+      return;
+    }
+
+    REQUIRE(vm.stack_size() == 3);
 
     REQUIRE(vm.is<int>(-1));
     REQUIRE(vm.get<int>(-1) == 110);
-
     vm.pop();
+
+    REQUIRE(vm.stack_size() == 2);
+
+    REQUIRE(vm.is<maan::vm_function>(-1));
+    vm.pop();
+
     REQUIRE(vm.stack_size() == 1);
   }
 

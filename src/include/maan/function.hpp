@@ -8,9 +8,9 @@ class function {
   vm_function view;
 
 public:
-  MAAN_INLINE function(lua_State* state, int index) : view(state, operations::abs(state, index)) {}
-  MAAN_INLINE function(vm_function const& other) : view{ other.state, other.location } {}
-  MAAN_INLINE function(vm_function&& other) : view{ other.state, other.location } {}
+  MAAN_INLINE function(lua_State* state, int const index) : view(state, operations::abs(state, index)) {}
+  MAAN_INLINE function(vm_function const& other) : view{.state = other.state, .location = other.location} {}
+  MAAN_INLINE function(vm_function&& other) : view{.state = other.state, .location = other.location} {}
 
   MAAN_INLINE ~function() {
     operations::remove(view.state, view.location);
@@ -19,11 +19,11 @@ public:
   function(function const&) = delete;
   function& operator=(function const&) = delete;
 
-  MAAN_INLINE function(function&& other) {
+  MAAN_INLINE function(function&& other) noexcept {
     view = std::exchange(other.view, {});
   };
 
-  MAAN_INLINE function& operator=(function&& other) {
+  MAAN_INLINE function& operator=(function&& other) noexcept {
     view = std::exchange(other.view, {});
     return *this;
   }

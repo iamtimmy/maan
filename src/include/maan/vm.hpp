@@ -30,53 +30,74 @@ public:
     return operations::size(state);
   }
 
-  MAAN_INLINE void pop(int n = 1) const {
+  MAAN_INLINE void pop(int const n = 1) const {
     operations::pop(state, n);
   }
 
-  [[nodiscard]] MAAN_INLINE int execute(std::string_view name, std::string_view code) const {
-    return operations::execute(state, name.data(), code.data(), code.size());
+  [[nodiscard]] MAAN_INLINE int execute(const char* name, const char* code, size_t const size) const {
+    return operations::execute(state, name, code, size);
   }
 
-  template <typename type>
-  [[nodiscard]] MAAN_INLINE decltype(auto) get(int index) const {
-    using cvtype = std::remove_cvref_t<type>;
+  [[nodiscard]] MAAN_INLINE int execute(const char* name, std::string_view const code) const {
+    return operations::execute(state, name, code.data(), code.size());
+  }
 
-    if constexpr (std::is_same_v<cvtype, function>) {
+  template <typename T>
+  [[nodiscard]] MAAN_INLINE decltype(auto) get(int const index) const {
+    using type = std::remove_cvref_t<T>;
+
+    if constexpr (std::is_same_v<type, function>) {
       return function(state, index);
     } else {
-      return stack::get<type>(state, index);
+      return stack::get<T>(state, index);
     }
   }
 
-  template <typename type>
-  [[nodiscard]] MAAN_INLINE bool is(int index) const {
-    using cvtype = std::remove_cvref_t<type>;
+  template <typename T>
+  [[nodiscard]] MAAN_INLINE bool is(int const index) const {
+    using type = std::remove_cvref_t<T>;
 
-    if constexpr (std::is_same_v<cvtype, function>) {
+    if constexpr (std::is_same_v<type, function>) {
       return operations::is(state, index, vm_type_tag::function);
     } else {
-      return stack::is<type>(state, index);
+      return stack::is<T>(state, index);
     }
   }
 
-  template <typename type>
-  MAAN_INLINE void push(type&& value) const {
-    if constexpr (native_function::is_function<type>) {
-      return native_function::push(state, std::forward<type>(value));
+  template <typename T>
+  MAAN_INLINE void push(T&& value) const {
+    if constexpr (native_function::is_function<T>) {
+      return native_function::push(state, std::forward<T>(value));
     } else {
-      return stack::push(state, std::forward<type>(value));
+      return stack::push(state, std::forward<T>(value));
     }
   }
 
-  template <int result_count = LUA_MULTRET, typename... types>
-  [[nodiscard]] MAAN_INLINE int call(types&&... args) const {
-    return stack::call<result_count>(state, std::forward<types>(args)...);
+  template <int result_count = LUA_MULTRET, typename... Ts>
+  [[nodiscard]] MAAN_INLINE int call(Ts&&... args) const {
+    constexpr auto stack_slot_count = []<size_t index = 0, size_t result = 0>(this auto&& self) {
+      using tuple_type = std::tuple<Ts...>;
+
+      if constexpr (index == sizeof...(Ts)) {
+        return result;
+      } else {
+        using arg_type = std::remove_cvref_t<std::tuple_element_t<index, tuple_type>>;
+        static_assert(vm_types::is_lua_convertable<arg_type> || aggregate::is_lua_convertable<arg_type>, "call unknown argument");
+
+        if constexpr (aggregate::is_lua_convertable<arg_type>) {
+          return self.template operator()<index + 1, result + aggregate::stack_size<arg_type>()>();
+        } else {
+          return self.template operator()<index + 1, result + 1>();
+        }
+      }
+    }();
+
+    return stack::call<result_count>(state, std::forward<Ts>(args)...);
   }
 
   [[nodiscard]] MAAN_INLINE table get_globals() const {
     lua_pushvalue(state, LUA_GLOBALSINDEX);
-    return table(state, -1);
+    return {state, -1};
   }
 
   MAAN_INLINE lua_State* set_state(lua_State* new_state) {

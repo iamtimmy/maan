@@ -19,10 +19,11 @@ MAAN_INLINE constexpr int constant_abs(lua_State* state) {
     return index;
   } else {
     static_assert("bad maan::operations::constant_abs index");
+    utilities::assume_unreachable();
   }
 }
 
-MAAN_INLINE inline int abs(lua_State* state, int index) {
+MAAN_INLINE inline int abs(lua_State* state, int const index) {
   if (index > LUA_REGISTRYINDEX && index < 0) {
     return size(state) + index + 1;
   }
@@ -30,7 +31,7 @@ MAAN_INLINE inline int abs(lua_State* state, int index) {
   return index;
 }
 
-MAAN_INLINE inline void pop(lua_State* state, int index) {
+MAAN_INLINE inline void pop(lua_State* state, int const index) {
   lua_settop(state, -index - 1);
 }
 
@@ -38,23 +39,23 @@ MAAN_INLINE inline void clear(lua_State* state) {
   lua_settop(state, 0);
 }
 
-MAAN_INLINE inline void remove(lua_State* state, int index) {
+MAAN_INLINE inline void remove(lua_State* state, int const index) {
   lua_remove(state, index);
 }
 
-MAAN_INLINE inline void insert(lua_State* state, int index) {
+MAAN_INLINE inline void insert(lua_State* state, int const index) {
   lua_insert(state, index);
 }
 
-MAAN_INLINE inline void copy(lua_State* state, int index) {
+MAAN_INLINE inline void copy(lua_State* state, int const index) {
   lua_pushvalue(state, index);
 }
 
-MAAN_INLINE inline vm_type_tag type(lua_State* state, int index) {
+MAAN_INLINE inline vm_type_tag type(lua_State* state, int const index) {
   return static_cast<vm_type_tag>(lua_type(state, index));
 }
 
-MAAN_INLINE inline bool is(lua_State* state, int index, vm_type_tag type) {
+MAAN_INLINE inline bool is(lua_State* state, int const index, vm_type_tag type) {
   return lua_type(state, index) == utilities::to_underlying(type);
 }
 
@@ -84,12 +85,12 @@ MAAN_INLINE inline int error_handler(lua_State* state) {
   return 1;
 }
 
-MAAN_INLINE inline int pcall(lua_State* state, int nargs, int result_count) {
+MAAN_INLINE inline int pcall(lua_State* state, int const nargs, int const result_count) {
   // expected stack layout:
   // - params
   // - chunk
 
-  // determine position of the error handler function
+  // determine the position of the error handler function
   const auto error_function_pos = size(state) - nargs;
   lua_pushcclosure(state, error_handler, 0);
 
@@ -126,14 +127,14 @@ MAAN_INLINE inline int pcall(lua_State* state, int nargs, int result_count) {
   }
 }
 
-MAAN_INLINE inline int pcall(lua_State* state, int nargs) {
+MAAN_INLINE inline int pcall(lua_State* state, int const nargs) {
   const auto stack_size = size(state);
 
   // expected stack layout:
   // - params
   // - chunk
 
-  // determine position of the error handler function
+  // determine the position of the error handler function
   const auto error_function_pos = size(state) - nargs;
   lua_pushcclosure(state, error_handler, 0);
 
@@ -174,7 +175,7 @@ MAAN_INLINE inline int pcall(lua_State* state) {
   return pcall(state, size(state) - 1);
 }
 
-MAAN_INLINE inline int execute(lua_State* state, const char* name, const char* code, size_t size) {
+MAAN_INLINE inline int execute(lua_State* state, const char* name, const char* code, size_t const size) {
   if (const auto result = luaL_loadbuffer(state, code, size, name); result == LUA_OK)
   {
     return pcall(state, 0);

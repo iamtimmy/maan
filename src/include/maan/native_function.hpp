@@ -1,8 +1,5 @@
 #pragma once
 
-#include <tuple>
-
-#include <lua.hpp>
 #include <maan/aggregate.hpp>
 #include <maan/vm_types.hpp>
 
@@ -15,22 +12,30 @@ struct function_requirements {
 template <typename return_type, typename... types>
 struct info;
 
-template <typename return_type, typename... types>
-struct info<return_type(types...)> {
-  using cvreturn_type = std::remove_cvref_t<return_type>;
-  using tuple_type = std::tuple<types...>;
+template <typename ReturnType, typename... Ts>
+struct info<ReturnType(Ts...)> {
+  using ret_type = std::remove_cvref_t<ReturnType>;
+  using raw_tuple_type = std::tuple<Ts...>;
+  using tuple_type = std::tuple<std::remove_reference_t<Ts>...>;
 
   template <int index>
-  using argument_types = std::tuple_element_t<index, std::tuple<types...>>;
+  using argument_types = std::tuple_element_t<index, std::tuple<Ts...>>;
 
   template <size_t index = 0, size_t result = 0>
   static consteval function_requirements check() {
-    if constexpr (index == sizeof...(types)) {
+    if constexpr (index == sizeof...(Ts)) {
       return {index, result};
     } else {
-      using arg_type = std::remove_cvref_t<std::tuple_element_t<index, tuple_type>>;
+      using raw_arg_type = std::tuple_element_t<index, tuple_type>;
+
+      static_assert(!(std::is_lvalue_reference_v<raw_arg_type> && !std::is_const_v<raw_arg_type>),
+                    "wrapped function argument type cannot be lvalue reference");
+
+      static_assert(!std::is_rvalue_reference_v<raw_arg_type>, "wrapped function argument type cannot be rvalue reference");
+
+      using arg_type = std::remove_cvref_t<raw_arg_type>;
       static_assert(vm_types::is_lua_convertable<arg_type> || aggregate::is_lua_convertable<arg_type>,
-                    "wrapped function has unsupported argument type");
+                    "wrapped function has argument type that isn't convertable");
 
       if constexpr (aggregate::is_lua_convertable<arg_type>) {
         return check<index + 1, result + aggregate::stack_size<arg_type>()>();
@@ -44,7 +49,7 @@ struct info<return_type(types...)> {
 
   template <size_t tuple_index = 0, size_t lua_index = 0>
   MAAN_INLINE static void set_tuple(lua_State* state, tuple_type& tuple) {
-    if constexpr (tuple_index == sizeof...(types)) {
+    if constexpr (tuple_index == sizeof...(Ts)) {
     } else {
       using arg_type = std::remove_cvref_t<argument_types<tuple_index>>;
 
@@ -93,7 +98,7 @@ concept is_function = requires(type) { requires std::is_function_v<std::remove_p
 MAAN_INLINE void push(lua_State* state, is_function auto&& function) {
   using info = info<std::remove_cvref_t<decltype(function)>>;
 
-  static_assert(vm_types::is_lua_convertable<typename info::cvreturn_type> || aggregate::is_lua_convertable<typename info::cvreturn_type>,
+  static_assert(vm_types::is_lua_convertable<typename info::ret_type> || aggregate::is_lua_convertable<typename info::ret_type>,
                 "wrapped function has unsupported return type");
 
   struct call_info {
@@ -111,20 +116,21 @@ MAAN_INLINE void push(lua_State* state, is_function auto&& function) {
       utilities::assume_unreachable();
     }
 
-    using tuple = typename info::tuple_type;
+    using tuple = info::tuple_type;
+    using ret_type = info::ret_type;
 
     tuple params;
     info::set_tuple(state, params);
 
     const auto* call = static_cast<call_info*>(lua_touserdata(state, lua_upvalueindex(1)));
 
-    if constexpr (std::is_same_v<typename info::cvreturn_type, void>) {
+    if constexpr (std::is_same_v<ret_type, void>) {
       std::apply(call->ptr, std::move(params));
       return 0;
     } else {
-      if constexpr (aggregate::is_lua_convertable<typename info::cvreturn_type>) {
+      if constexpr (aggregate::is_lua_convertable<ret_type>) {
         aggregate::push(state, std::apply(call->ptr, std::move(params)));
-        return aggregate::stack_size<typename info::cvreturn_type>();
+        return aggregate::stack_size<ret_type>();
       } else {
         vm_types::push(state, std::apply(call->ptr, std::move(params)));
         return 1;

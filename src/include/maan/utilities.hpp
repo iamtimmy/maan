@@ -94,13 +94,13 @@ namespace maan::utilities {
 namespace detail {
 struct utype {
   template <typename T>
-  operator T() // NOLINT(hicpp-explicit-conversions)
-  {}
+  // ReSharper disable once CppFunctionDoesntReturnValue
+  operator T() {}
 };
 
 template <typename T>
 struct type_namer {
-  template <typename id = T>
+  template <typename _ = T>
   static consteval std::string_view id() {
     auto [sig, begin, delta, end] = std::tuple{
 #if MAAN_GNU
@@ -113,7 +113,7 @@ struct type_namer {
     // Find the beginning of the name.
     //
     size_t f = sig.size();
-    while (sig.substr(--f, begin.size()).compare(begin) != 0) {
+    while (sig.substr(--f, begin.size()) != begin) {
       if (f == 0) {
         return "";
       }
@@ -122,7 +122,7 @@ struct type_namer {
 
     // Find the end of the string.
     //
-    auto l = sig.find_first_of(end, f);
+    const auto l = sig.find_first_of(end, f);
     if (l == std::string::npos) {
       return "";
     }
@@ -130,12 +130,13 @@ struct type_namer {
     // Return the value.
     //
     auto r = sig.substr(f, l - f);
-    if (r.size() > 7 && r.substr(0, 7) == "struct ") {
+    if (r.starts_with("struct ")) {
       r.remove_prefix(7);
     }
-    if (r.size() > 6 && r.substr(0, 6) == "class ") {
+    if (r.starts_with("class ")) {
       r.remove_prefix(6);
     }
+    // ReSharper disable once CppDFALocalValueEscapesFunction
     return r;
   }
 
@@ -159,7 +160,7 @@ struct type_namer {
 
 template <auto V>
 struct value_namer {
-  template <auto id = V>
+  template <auto _ = V>
   static consteval std::string_view id() {
     auto [sig, begin, delta, end] = std::tuple{
 #if MAAN_GNU
@@ -179,7 +180,7 @@ struct value_namer {
 
     // Find the end of the string.
     //
-    auto l = sig.find(end, f);
+    const auto l = sig.find(end, f);
     if (l == std::string::npos) {
       return "";
     }
@@ -323,6 +324,7 @@ MAAN_INLINE constexpr decltype(auto) visit_members_types(member_countable auto&&
   using type = std::remove_cvref_t<decltype(object)>();
   constexpr auto count = member_count<decltype(object)>();
 
+  // ReSharper disable CppEntityUsedOnlyInUnevaluatedContext
   if constexpr (count == 0) {
     return visitor.template operator()<>();
   } else if constexpr (count == 1) {
@@ -361,6 +363,7 @@ MAAN_INLINE constexpr decltype(auto) visit_members_types(member_countable auto&&
   } else {
     static_assert(std::is_same_v<type, void>, "type can not be used for counting members");
   }
+  // ReSharper restore CppEntityUsedOnlyInUnevaluatedContext
 }
 
 MAAN_INLINE constexpr decltype(auto) visit_members(member_countable auto&& object, auto&& visitor) {
