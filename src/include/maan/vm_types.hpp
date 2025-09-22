@@ -1,7 +1,5 @@
 #pragma once
 
-#include <concepts>
-
 #include <maan/vm_table.hpp>
 #include <maan/vm_function.hpp>
 #include <maan/operatons.hpp>
@@ -15,43 +13,34 @@ struct lua_userdata {
 };
 
 template <typename T>
-concept is_lua_convertable_integer = requires(T) {
-  requires std::is_integral_v<T> && (std::is_signed_v<T> && sizeof(T) < sizeof(int64_t) || std::is_unsigned_v<T> && sizeof(T) < sizeof(uint32_t));
-};
+concept is_lua_convertable_integer =
+  std::is_integral_v<T> && (std::is_signed_v<T> && sizeof(T) < sizeof(int64_t) || std::is_unsigned_v<T> && sizeof(T) < sizeof(uint32_t));
 
 template <typename T>
-concept is_lua_convertable_number = requires(T) {
-  requires std::is_floating_point_v<T> ||
-             (std::is_signed_v<T> && sizeof(T) >= sizeof(int64_t) || std::is_unsigned_v<T> && sizeof(T) >= sizeof(uint32_t));
-};
+concept is_lua_convertable_number =
+  std::is_floating_point_v<T> || (std::is_signed_v<T> && sizeof(T) >= sizeof(int64_t) || std::is_unsigned_v<T> && sizeof(T) >= sizeof(uint32_t));
 
 template <typename T>
-concept is_lua_convertable_string = requires(T) {
-  requires std::is_same_v<T, const char*> || std::is_same_v<T, char*> || std::is_same_v<T, std::string> || std::is_same_v<T, std::string_view> ||
-             std::is_nothrow_convertible_v<T, utilities::string_literal>;
-};
+concept is_lua_convertable_string = std::is_same_v<T, const char*> || std::is_same_v<T, char*> || std::is_same_v<T, std::string> ||
+                                    std::is_same_v<T, std::string_view> || std::is_nothrow_convertible_v<T, utilities::string_literal>;
 
 template <typename T>
-concept is_lua_convertable_table = requires(T) { requires std::is_same_v<T, vm_table>; };
+concept is_lua_convertable_table = std::is_same_v<T, vm_table>;
 
 template <typename T>
-concept is_lua_convertable_function = requires(T) { requires std::is_same_v<T, vm_function>; };
+concept is_lua_convertable_function = std::is_same_v<T, vm_function>;
 
 template <typename T>
-concept is_lua_fundamental_convertable = requires(T) {
-  requires std::is_same_v<bool, T> || is_lua_convertable_integer<T> || is_lua_convertable_number<T> || is_lua_convertable_string<T> ||
-             is_lua_convertable_table<T> || is_lua_convertable_function<T>;
-};
+concept is_lua_fundamental_convertable = std::is_same_v<bool, T> || is_lua_convertable_integer<T> || is_lua_convertable_number<T> ||
+                                         is_lua_convertable_string<T> || is_lua_convertable_table<T> || is_lua_convertable_function<T>;
 
 template <typename T>
-concept is_lua_convertable_pointer = requires(T) { requires std::is_pointer_v<T> && std::is_class_v<std::remove_pointer<T>>; };
+concept is_lua_convertable_pointer = std::is_pointer_v<T> && std::is_class_v<std::remove_pointer<T>>;
 } // namespace detail
 
 template <typename T>
-concept is_lua_convertable = requires(T) {
-  requires !std::is_function_v<std::remove_pointer_t<T>> &&
-             (std::is_void_v<T> || detail::is_lua_fundamental_convertable<T> || detail::is_lua_convertable_pointer<T>);
-};
+concept is_lua_convertable = !std::is_function_v<std::remove_pointer_t<T>> &&
+                             (std::is_void_v<T> || detail::is_lua_fundamental_convertable<T> || detail::is_lua_convertable_pointer<T>);
 
 MAAN_INLINE void push(lua_State* state, auto&& object)
   requires is_lua_convertable<std::remove_cvref_t<decltype(object)>>

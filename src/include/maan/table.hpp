@@ -15,6 +15,12 @@ public:
   MAAN_INLINE table(vm_table const& other) : view{ other.state, other.location } {}
   MAAN_INLINE table(vm_table&& other) : view{ other.state, other.location } {}
 
+  MAAN_INLINE table(lua_State* state) {
+    lua_newtable(state);
+    const auto position = operations::abs(state, -1);
+    view = {state, position};
+  }
+
   MAAN_INLINE ~table() {
     operations::remove(view.state, view.location);
   }

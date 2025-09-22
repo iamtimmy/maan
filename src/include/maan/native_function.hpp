@@ -98,7 +98,9 @@ concept is_function = requires(type) { requires std::is_function_v<std::remove_p
 MAAN_INLINE void push(lua_State* state, is_function auto&& function) {
   using info = info<std::remove_cvref_t<decltype(function)>>;
 
-  static_assert(vm_types::is_lua_convertable<typename info::ret_type> || aggregate::is_lua_convertable<typename info::ret_type>,
+  using ret_type = info::ret_type;
+
+  static_assert(vm_types::is_lua_convertable<ret_type> || aggregate::is_lua_convertable<ret_type>,
                 "wrapped function has unsupported return type");
 
   struct call_info {
@@ -117,7 +119,6 @@ MAAN_INLINE void push(lua_State* state, is_function auto&& function) {
     }
 
     using tuple = info::tuple_type;
-    using ret_type = info::ret_type;
 
     tuple params;
     info::set_tuple(state, params);

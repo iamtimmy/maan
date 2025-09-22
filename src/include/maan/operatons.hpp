@@ -1,7 +1,5 @@
 #pragma once
 
-#include <type_traits>
-
 #include <lua.hpp>
 #include <maan/utilities.hpp>
 #include <maan/vm_type_tag.hpp>

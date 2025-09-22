@@ -1,9 +1,7 @@
 #pragma once
 
-#include <new>
 #include <utility>
 
-#include <lua.hpp>
 #include <maan/stack.hpp>
 #include <maan/function.hpp>
 #include <maan/table.hpp>

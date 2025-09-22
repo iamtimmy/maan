@@ -6,14 +6,10 @@
 #include <maan/vm_function.hpp>
 #include <maan/vm_table.hpp>
 
-#include <tuple>
-
 namespace maan::aggregate {
 template <typename T>
-concept is_lua_convertable = requires(T) {
-  requires std::is_class_v<std::remove_cvref_t<T>> && utilities::member_countable<std::remove_cvref_t<T>> &&
-             !std::is_same_v<vm_function, std::remove_cvref_t<T>> && !std::is_same_v<vm_table, std::remove_cvref_t<T>>;
-};
+concept is_lua_convertable = std::is_class_v<std::remove_cvref_t<T>> && utilities::member_countable<std::remove_cvref_t<T>> &&
+                             !std::is_same_v<vm_function, std::remove_cvref_t<T>> && !std::is_same_v<vm_table, std::remove_cvref_t<T>>;
 
 template <is_lua_convertable T>
 MAAN_INLINE static constexpr int stack_size() {

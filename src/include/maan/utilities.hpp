@@ -291,7 +291,7 @@ public:
 };
 
 template <typename T>
-concept aggregate_member_countable = requires(T) { requires std::is_aggregate_v<T>; };
+concept aggregate_member_countable = std::is_aggregate_v<T>;
 
 template <aggregate_member_countable T>
 consteval int aggregate_member_counter(auto&&... members) {
