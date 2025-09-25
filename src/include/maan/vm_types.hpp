@@ -2,7 +2,7 @@
 
 #include <maan/vm_table.hpp>
 #include <maan/vm_function.hpp>
-#include <maan/operatons.hpp>
+#include <maan/operations.hpp>
 #include <maan/utilities.hpp>
 
 namespace maan::vm_types {

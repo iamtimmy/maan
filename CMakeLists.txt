@@ -47,7 +47,7 @@ set(maan_SOURCES
 	"src/include/maan/aggregate.hpp"
 	"src/include/maan/function.hpp"
 	"src/include/maan/native_function.hpp"
-	"src/include/maan/operatons.hpp"
+	"src/include/maan/operations.hpp"
 	"src/include/maan/stack.hpp"
 	"src/include/maan/table.hpp"
 	"src/include/maan/utilities.hpp"

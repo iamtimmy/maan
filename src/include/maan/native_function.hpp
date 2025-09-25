@@ -92,16 +92,32 @@ struct info<return_type (clazz::*)(types...)> : info<return_type(clazz*, types..
 template <typename clazz, typename return_type, typename... types>
 struct info<return_type (clazz::*)(types...) const> : info<return_type(clazz*, types...)> {};
 
-template <typename type>
-concept is_function = requires(type) { requires std::is_function_v<std::remove_pointer_t<std::remove_cvref_t<type>>>; };
+template <typename T>
+concept is_cfunction = requires(T fn) {
+  { fn(std::declval<lua_State*>()) } -> std::same_as<int>;
+  requires std::is_function_v<std::remove_pointer_t<std::remove_cvref_t<T>>>;
+};
+
+template <typename T>
+concept is_function = !is_cfunction<T> && std::is_function_v<std::remove_pointer_t<std::remove_cvref_t<T>>>;
+
+static_assert(is_cfunction<decltype(+[](lua_State*) -> int { return 0; })>, "yes");
+static_assert(!is_cfunction<decltype([a = 1](lua_State*) -> int { return 0; })>, "no");
+
+static_assert(is_cfunction<int (*)(lua_State*)>, "yes");
+static_assert(!is_cfunction<int (*)()>, "no");
+static_assert(!is_cfunction<void (*)(lua_State*)>, "no");
+
+MAAN_INLINE inline void push(lua_State* state, int (*fn)(lua_State*), int const count = 0) {
+  lua_pushcclosure(state, fn, count);
+}
 
 MAAN_INLINE void push(lua_State* state, is_function auto&& function) {
   using info = info<std::remove_cvref_t<decltype(function)>>;
 
   using ret_type = info::ret_type;
 
-  static_assert(vm_types::is_lua_convertable<ret_type> || aggregate::is_lua_convertable<ret_type>,
-                "wrapped function has unsupported return type");
+  static_assert(vm_types::is_lua_convertable<ret_type> || aggregate::is_lua_convertable<ret_type>, "wrapped function has unsupported return type");
 
   struct call_info {
     std::remove_cvref_t<decltype(function)> ptr;

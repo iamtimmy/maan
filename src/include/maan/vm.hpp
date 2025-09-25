@@ -1,7 +1,5 @@
 #pragma once
 
-#include <utility>
-
 #include <maan/stack.hpp>
 #include <maan/function.hpp>
 #include <maan/table.hpp>
@@ -32,12 +30,36 @@ public:
     operations::pop(state, n);
   }
 
+  [[nodiscard]] MAAN_INLINE int load(const char* name, std::string_view const code) const {
+    return operations::load(state, name, code.data(), code.size());
+  }
+
+  [[nodiscard]] MAAN_INLINE int load(const char* name, std::string_view const code, int const env_table_index) const {
+    return operations::load(state, name, code.data(), code.size(), env_table_index);
+  }
+
+  [[nodiscard]] MAAN_INLINE int load(const char* name, const char* code, size_t const size) const {
+    return operations::load(state, name, code, size);
+  }
+
+  [[nodiscard]] MAAN_INLINE int load(const char* name, const char* code, size_t const size, int const env_table_index) const {
+    return operations::load(state, name, code, size, env_table_index);
+  }
+
   [[nodiscard]] MAAN_INLINE int execute(const char* name, const char* code, size_t const size) const {
     return operations::execute(state, name, code, size);
   }
 
+  [[nodiscard]] MAAN_INLINE int execute(const char* name, const char* code, size_t const size, int const env_table_index) const {
+    return operations::execute(state, name, code, size, env_table_index);
+  }
+
   [[nodiscard]] MAAN_INLINE int execute(const char* name, std::string_view const code) const {
     return operations::execute(state, name, code.data(), code.size());
+  }
+
+  [[nodiscard]] MAAN_INLINE int execute(const char* name, std::string_view const code, int const env_table_index) const {
+    return operations::execute(state, name, code.data(), code.size(), env_table_index);
   }
 
   template <typename T>
@@ -62,9 +84,15 @@ public:
     }
   }
 
+  MAAN_INLINE void push_cfunction(lua_CFunction const fn, int const count = 0) const {
+    native_function::push(state, fn, count);
+  }
+
   template <typename T>
   MAAN_INLINE void push(T&& value) const {
     if constexpr (native_function::is_function<T>) {
+      return native_function::push(state, std::forward<T>(value));
+    } else if constexpr (native_function::is_cfunction<T>) {
       return native_function::push(state, std::forward<T>(value));
     } else {
       return stack::push(state, std::forward<T>(value));
@@ -100,6 +128,10 @@ public:
 
   MAAN_INLINE lua_State* set_state(lua_State* new_state) {
     return std::exchange(state, new_state);
+  }
+
+  MAAN_INLINE void release() {
+    state = nullptr;
   }
 
   MAAN_INLINE vm() : state{luaL_newstate()} {

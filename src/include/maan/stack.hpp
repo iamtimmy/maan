@@ -1,7 +1,7 @@
 #pragma once
 
 #include <maan/utilities.hpp>
-#include <maan/operatons.hpp>
+#include <maan/operations.hpp>
 #include <maan/vm_types.hpp>
 #include <maan/aggregate.hpp>
 

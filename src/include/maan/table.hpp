@@ -9,20 +9,30 @@
 namespace maan {
 class table {
   vm_table view;
+  bool has_ownership;
 
 public:
-  MAAN_INLINE table(lua_State* state, int const index) : view{state, operations::abs(state, index)} {}
-  MAAN_INLINE table(vm_table const& other) : view{ other.state, other.location } {}
-  MAAN_INLINE table(vm_table&& other) : view{ other.state, other.location } {}
+  MAAN_INLINE table(lua_State* state, int const index) : view{state, operations::abs(state, index)} {
+    has_ownership = true;
+  }
+  MAAN_INLINE table(vm_table const& other) : view{other.state, other.location} {
+    has_ownership = true;
+  }
+  MAAN_INLINE table(vm_table&& other) : view{other.state, other.location} {
+    has_ownership = true;
+  }
 
   MAAN_INLINE table(lua_State* state) {
     lua_newtable(state);
     const auto position = operations::abs(state, -1);
     view = {state, position};
+    has_ownership = true;
   }
 
   MAAN_INLINE ~table() {
-    operations::remove(view.state, view.location);
+    if (view.location > 0 && has_ownership) {
+      operations::remove(view.state, view.location);
+    }
   }
 
   table(table const&) = delete;
@@ -30,11 +40,21 @@ public:
 
   MAAN_INLINE table(table&& other) noexcept {
     view = std::exchange(other.view, {});
+    has_ownership = other.has_ownership;
   };
 
   MAAN_INLINE table& operator=(table&& other) noexcept {
     view = std::exchange(other.view, {});
+    has_ownership = other.has_ownership;
     return *this;
+  }
+
+  MAAN_INLINE void release() {
+    has_ownership = false;
+  }
+
+  vm_table get_view() const {
+    return view;
   }
 
   template <typename T>
@@ -78,6 +98,8 @@ public:
     }
 
     if constexpr (native_function::is_function<T>) {
+      native_function::push(view.state, std::forward<T>(value));
+    } else if constexpr (native_function::is_cfunction<T>) {
       native_function::push(view.state, std::forward<T>(value));
     } else if constexpr (std::is_same_v<function, type>) {
       operations::copy(view.state, value.stack_location());

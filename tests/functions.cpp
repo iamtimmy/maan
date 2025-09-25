@@ -112,3 +112,38 @@ TEST_CASE("nested stack functions", "[functions]") {
 
   REQUIRE(vm.stack_size() == 0);
 }
+
+TEST_CASE("basic cfunctions", "[functions]") {
+  auto vm = maan::vm();
+  REQUIRE(vm.running() == true);
+
+  REQUIRE(vm.stack_size() == 0);
+
+  vm.push_cfunction(+[](lua_State* state) -> int {
+    auto vmv = maan::vm(state);
+
+    struct args {
+      float a1;
+      float a2;
+    };
+
+    if (!vmv.is<args>(-2)) {
+      vmv.push("invalid arguments");
+      vmv.release();
+      lua_error(state);
+    }
+
+    const auto [a1, a2] = vmv.get<args>(-2);
+    vmv.push(a1 + a2);
+    vmv.release();
+    return 1;
+  });
+
+  REQUIRE(vm.stack_size() == 1);
+
+  REQUIRE(vm.call(100.f, 100.f) == 1);
+  REQUIRE(vm.stack_size() == 1);
+
+  REQUIRE(vm.is<float>(-1) == true);
+  REQUIRE(vm.get<float>(-1) == 200.f);
+}

@@ -173,17 +173,47 @@ MAAN_INLINE inline int pcall(lua_State* state) {
   return pcall(state, size(state) - 1);
 }
 
-MAAN_INLINE inline int execute(lua_State* state, const char* name, const char* code, size_t const size) {
-  if (const auto result = luaL_loadbuffer(state, code, size, name); result == LUA_OK)
-  {
-    return pcall(state, 0);
+MAAN_INLINE inline int load(lua_State* state, const char* name, const char* code, size_t const size) {
+  if (const auto result = luaL_loadbuffer(state, code, size, name); result == LUA_OK) {
+    return LUA_OK;
   } else {
-    if (result == LUA_ERRSYNTAX) {
+    switch (result) {
+    case LUA_ERRSYNTAX: {
       return -1;
     }
+    case LUA_ERRMEM: {
+      clear(state);
+      return -2;
+    }
+    default: {
+      utilities::assume_unreachable();
+    }
+    }
+  }
+}
 
-    clear(state);
-    return -1;
+MAAN_INLINE inline int load(lua_State* state, const char* name, const char* code, size_t const size, int const env_table_index) {
+  if (const auto result = load(state, name, code, size); result == LUA_OK) {
+    copy(state, env_table_index);
+    return lua_setfenv(state, -2) ? 0 : -4;
+  } else {
+    return result;
+  }
+}
+
+MAAN_INLINE inline int execute(lua_State* state, const char* name, const char* code, size_t const size) {
+  if (const auto result = load(state, name, code, size); result == 0) {
+    return pcall(state, 0);
+  } else {
+    return result;
+  }
+}
+
+MAAN_INLINE inline int execute(lua_State* state, const char* name, const char* code, size_t const size, int const env_table_index) {
+  if (const auto result = load(state, name, code, size, env_table_index); result == 0) {
+    return pcall(state, 0);
+  } else {
+    return result;
   }
 }
 } // namespace maan::operations

@@ -6,14 +6,23 @@
 namespace maan {
 class function {
   vm_function view;
+  bool has_ownership;
 
 public:
-  MAAN_INLINE function(lua_State* state, int const index) : view(state, operations::abs(state, index)) {}
-  MAAN_INLINE function(vm_function const& other) : view{.state = other.state, .location = other.location} {}
-  MAAN_INLINE function(vm_function&& other) : view{.state = other.state, .location = other.location} {}
+  MAAN_INLINE function(lua_State* state, int const index) : view(state, operations::abs(state, index)) {
+    has_ownership = true;
+  }
+  MAAN_INLINE function(vm_function const& other) : view{.state = other.state, .location = other.location} {
+    has_ownership = true;
+  }
+  MAAN_INLINE function(vm_function&& other) : view{.state = other.state, .location = other.location} {
+    has_ownership = true;
+  }
 
   MAAN_INLINE ~function() {
-    operations::remove(view.state, view.location);
+    if (view.location > 0 && has_ownership) {
+      operations::remove(view.state, view.location);
+    }
   }
 
   function(function const&) = delete;
@@ -21,11 +30,17 @@ public:
 
   MAAN_INLINE function(function&& other) noexcept {
     view = std::exchange(other.view, {});
+    has_ownership = other.has_ownership;
   };
 
   MAAN_INLINE function& operator=(function&& other) noexcept {
     view = std::exchange(other.view, {});
+    has_ownership = other.has_ownership;
     return *this;
+  }
+
+  MAAN_INLINE void release() {
+    has_ownership = false;
   }
 
   template <int result_count = LUA_MULTRET, typename... types>
